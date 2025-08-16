@@ -20,7 +20,6 @@ t="T - Sort Equipment by Status"
 p="P - Sort Equipment by Type"
 q="Q - Exit from Program"
 select="Please select a choice: "
-selection=($a $s $u $d $m $t $p)
 
 # Print the menu
 show_menu() {
@@ -28,6 +27,69 @@ show_menu() {
   printf '%s\n' "$a" "$s" "$u" "$d" "$m" "$t" "$p"
   printf '\n%s\n\n' "$q"
 }
+
+
+#========================================Task 2========================================
+# Task 2: Implement Add Equipment function
+
+# Add Equipment
+add_equipment() {
+  echo "nothing"
+
+
+
+}
+#========================================Task 3========================================
+# Task 3: Implement Search Equipment function
+
+# Search Equipment
+search_equipment() {
+  echo "nothing"
+
+}
+
+#========================================Task 4========================================
+# Task 4: Implement Update Equipment function
+
+# Update Equipment
+update_equipment() {
+  echo "nothing"
+
+
+
+}
+
+#========================================Task 5========================================
+# Task 5: Implement Delete Equipment function
+
+# Delete Equipment
+delete_equipment() {
+  echo "nothing"
+
+}
+
+#========================================Task 6========================================
+
+# Sort by Model
+sort_by_model() {
+  echo "nothing"
+
+}
+#--------------------------------------------------------------------------------------
+# Sort by Status
+sort_by_status() {
+
+  echo "nothing"
+
+}
+#--------------------------------------------------------------------------------------
+# Sort by Type
+sort_by_type() {
+
+  echo "nothing"
+
+}
+#--------------------------------------------------------------------------------------
 
 # Main menu
 main_menu() {
@@ -62,75 +124,6 @@ main_menu() {
   done
 }
 
-#========================================Task 2========================================
-# Task 2: Implement Add Equipment function
-
-# Add Equipment
-add_equipment() {
-
-
-
-
-
-
-
- }
-#========================================Task 3========================================
-# Task 3: Implement Search Equipment function
-
-# Search Equipment
-search_equipment() {
-
-
-
-
-}
-
-#========================================Task 4========================================
-# Task 4: Implement Update Equipment function
-
-# Update Equipment
-update_equipment() {
-
-
-
-
-}
-
-#========================================Task 5========================================
-# Task 5: Implement Delete Equipment function
-
-# Delete Equipment
-delete_equipment() {
-
-
-
-
-}
-
-#========================================Task 6========================================
-
-# Sort by Model
-sort_by_model() {
-
-
-
-}
-#--------------------------------------------------------------------------------------
-# Sort by Status
-sort_by_status() {
-
-
-
-}
-#--------------------------------------------------------------------------------------
-# Sort by Type
-sort_by_type() {
-
-
-
-}
-#--------------------------------------------------------------------------------------
-
-
 main_menu 
+
+exit 0
