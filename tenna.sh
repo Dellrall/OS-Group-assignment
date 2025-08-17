@@ -142,8 +142,8 @@ add_equipment() {
         while true; do
         read -rp "Type: " equipment_type
           if null_check "$equipment_type" "Equipment Type"; then
-          if [[ ! "$equipment_type" == "keyboard" && ! "$equipment_type" == "mouse" && ! "$equipment_type" == "monitor" && ! "$equipment_type" == "webcam" && ! "$equipment_type" == "mousepad" ]]; then
-              echo "Invalid equipment type. Please enter keyboard, mouse, monitor, or computer."
+          if [[ ! "$equipment_type" == "keyboard" && ! "$equipment_type" == "mouse" && ! "$equipment_type" == "monitor" && ! "$equipment_type" == "webcam" && ! "$equipment_type" == "mousepad" && ! "$equipment_type" == "laptop" ]]; then
+              echo "Invalid equipment type. Please enter keyboard, mouse, monitor, webcam, mousepad, or laptop."
               sleep 2
               tput cuu 2
               tput ed
@@ -284,7 +284,70 @@ main_menu
 
 # Search Equipment
 search_equipment() {
-  echo "nothing"
+  clear
+  printf '%s\n\n' "Search Equipment"
+  while true; do
+  if [ ! -f Equipment.txt ]; then
+    echo "No equipment registered yet, please register equipment first."
+    echo "-------------------------------------------------------------------------"
+    sleep 4
+    tput cuu 2
+    tput ed
+    main_menu
+  fi
+    read -rp "Enter Serial Number: " equipment_serial
+    echo "-------------------------------------------------------------------------"
+    if null_check "$equipment_serial" "Equipment Serial"; then
+      if [[ ! "$equipment_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
+                echo "Invalid Serial Number format. Please use the format: AB123456789"
+                sleep 2
+                tput cuu 2
+                tput ed
+                continue
+      fi
+
+      if ! grep -q ":$equipment_serial:" Equipment.txt; then
+          echo "No equipment found with serial number: $equipment_serial"
+          sleep 2
+          tput cuu 2
+          tput ed
+          continue
+      fi
+    fi
+    
+    #Find the matching record and extract fields
+    record=$(grep ":$equipment_serial:" Equipment.txt)
+    #Get infor from information field separator
+    IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<< "$record"
+
+    printf '\n'
+    echo "Equipment ID: $eq_id"
+    echo "Type: $eq_type"
+    echo "Model: $eq_model"
+    echo "Serial: $eq_serial"
+    echo "Status: $eq_status"
+    echo "Purchase Date: $eq_purchase_date"
+    echo "Warranty Date: $eq_expiry_date"
+    printf '\n'
+    echo "-------------------------------------------------------------------------"
+
+    printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
+    read -rp "Search another Equipment? (y)es or (q)uit: " search_another
+    search_another=${search_another^^}
+    if [[ $search_another == "Y" ]]; then
+        continue
+      elif [[ $search_another == "Q" ]]; then
+            echo "Returning to Equipment Maintenance Menu...."
+            sleep 2
+            main_menu
+        else
+            echo "Invalid choice, please enter either y or q"
+            sleep 2
+            tput cuu 3
+            tput ed
+            printf '\n'
+    fi
+  done
 
 }
 
