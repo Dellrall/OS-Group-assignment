@@ -3,8 +3,8 @@
 # tenna.sh made by Lye Wei Lun
 
 # Enable alternate screen buffer
-tput smcup             # Save current terminal content and switch to alternate buffer
-trap 'tput rmcup' EXIT # Restore original terminal content on exit
+#tput smcup             # Save current terminal content and switch to alternate buffer
+#trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
@@ -38,17 +38,40 @@ show_menu() {
 validate_date() {
   local date_input=$1
   local error_msg=$2
+  local format=${3:-"MM-DD-YYYY"}  # Default format
+    
+    case $format in
+      "MM-DD-YYYY")
+        # Check format
+        if [[ ! "$date_input" =~ ^[0-9]{2}-[0-9]{2}-[0-9]{4}$ ]]; then
+          echo "$error_msg Format must be MM-DD-YYYY."
+          return 1
+        fi
+        
+        # Extract month, day, year
+        local month=${date_input:0:2}
+        local day=${date_input:3:2}
+        local year=${date_input:6:4}
+        ;;
+        
+      "YYYY-MM-DD")
+        # Check format
+        if [[ ! "$date_input" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+          echo "$error_msg Format must be YYYY-MM-DD."
+          return 1
+        fi
   
-  # Check format
-  if [[ ! "$date_input" =~ ^[0-9]{2}-[0-9]{2}-[0-9]{4}$ ]]; then
-    echo "$error_msg Format must be MM-DD-YYYY."
-    return 1
-  fi
-  
-  # Extract month, day, year
-  local month=${date_input:0:2}
-  local day=${date_input:3:2}
-  local year=${date_input:6:4}
+      # Extract year, month, day
+      local year=${date_input:0:4}
+      local month=${date_input:5:2}
+      local day=${date_input:8:2}
+      ;;
+      
+    *)
+      echo "Unsupported date format: $format"
+      return 1
+      ;;
+  esac
   
   # Remove leading zeros
   month=$((10#$month))
@@ -88,6 +111,28 @@ if (( day < 1 || day > days_in_month )); then
   return 0
 }
 
+#--------------------------------------------------------------------------------------
+# Date conversion function
+convert_date_format() {
+  local date_input=$1
+  local from_format=$2
+  local to_format=$3
+  
+  case "$from_format:$to_format" in
+    "MM-DD-YYYY:YYYY-MM-DD")
+      # MM-DD-YYYY to YYYY-MM-DD
+      echo "${date_input:6:4}-${date_input:0:2}-${date_input:3:2}"
+      ;;
+    "YYYY-MM-DD:MM-DD-YYYY")
+      # YYYY-MM-DD to MM-DD-YYYY
+      echo "${date_input:5:2}-${date_input:8:2}-${date_input:0:4}"
+      ;;
+    *)
+      # Same format or unsupported conversion
+      echo "$date_input"
+      ;;
+  esac
+}
 #--------------------------------------------------------------------------------------
 # Null check function
 null_check() {
@@ -263,7 +308,7 @@ add_equipment() {
         #Return or add new equipment
         printf '\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
         confirmation
-    elif [[ $choice == "Q" ]]; then
+    elif [[ "$choice" == "Q" ]]; then
         echo "Returning to Equipment Maintenance Menu...."
         sleep 2
         break
@@ -276,8 +321,6 @@ add_equipment() {
         confirmation
       fi
 done
-
-main_menu
 }
 #========================================Task 3========================================
 # Task 3: Implement Search Equipment function
@@ -285,40 +328,46 @@ main_menu
 # Search Equipment
 search_equipment() {
   clear
-  printf '%s\n\n' "Search Equipment"
-  while true; do
+  search_another="Y"
+  confirmation() {
+    read -rp "Search another Equipment? (y)es or (q)uit: " search_another
+    search_another=${search_another^^}
+  }
+
+
+printf '%s\n\n' "Search Equipment"
+while [[ "$search_another" == "Y" ]]; do
   if [ ! -f Equipment.txt ]; then
     echo "No equipment registered yet, please register equipment first."
     echo "-------------------------------------------------------------------------"
     sleep 4
-    tput cuu 2
-    tput ed
-    main_menu
+    break
   fi
-    read -rp "Enter Serial Number: " equipment_serial
+    
+  echo "Please enter the Serial Number of the equipment you want to search for."
+    read -rp "Enter Serial Number: " EquipSerial
     echo "-------------------------------------------------------------------------"
-    if null_check "$equipment_serial" "Equipment Serial"; then
-      if [[ ! "$equipment_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
+    if null_check "$EquipSerial" "Equipment Serial"; then
+      if   [[ ! "$EquipSerial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
                 echo "Invalid Serial Number format. Please use the format: AB123456789"
                 sleep 2
                 tput cuu 2
                 tput ed
                 continue
-      fi
-
-      if ! grep -q ":$equipment_serial:" Equipment.txt; then
-          echo "No equipment found with serial number: $equipment_serial"
-          sleep 2
-          tput cuu 2
-          tput ed
-          continue
-      fi
+      elif  ! grep -q ":$EquipSerial:" Equipment.txt ; then
+              echo "No equipment found with serial number: $EquipSerial"
+              sleep 2
+              tput cuu 2
+              tput ed
+              continue
     fi
-    
-    #Find the matching record and extract fields
-    record=$(grep ":$equipment_serial:" Equipment.txt)
-    #Get infor from information field separator
-    IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<< "$record"
+  
+
+
+  #Find the matching record and extract fields
+  record=$(grep ":$EquipSerial:" Equipment.txt)
+  #Get infor from information field separator
+  IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<< "$record"
 
     printf '\n'
     echo "Equipment ID: $eq_id"
@@ -334,21 +383,20 @@ search_equipment() {
     printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
     read -rp "Search another Equipment? (y)es or (q)uit: " search_another
     search_another=${search_another^^}
-    if [[ $search_another == "Y" ]]; then
-        continue
-      elif [[ $search_another == "Q" ]]; then
+    
+elif [[ $search_another == "Q" ]]; then
             echo "Returning to Equipment Maintenance Menu...."
             sleep 2
-            main_menu
+            break
         else
             echo "Invalid choice, please enter either y or q"
             sleep 2
             tput cuu 3
             tput ed
             printf '\n'
+            confirmation
     fi
-  done
-
+done
 }
 
 #========================================Task 4========================================
@@ -356,11 +404,188 @@ search_equipment() {
 
 # Update Equipment
 update_equipment() {
-  echo "nothing"
+  clear
+  update_another="Y"
+  confirmation() {
+    read -rp "Update another Equipment? (y)es or (q)uit: " update_another
+    update_another=${update_another^^}
+  }
 
+  printf '%s\n\n' "Update Equipment Details"
+while [[ $update_another == "Y" ]]; do
+    if [ ! -f Equipment.txt ]; then
+        echo "No equipment registered yet, please register equipment first."
+        echo "-------------------------------------------------------------------------"
+        sleep 4
+        break
+      fi
+      read -rp "Enter Equipment ID: " equipment_id
+      echo "-------------------------------------------------------------------------"
+        # Check if equipment exists
+        if null_check "$equipment_id" "Equipment ID"; then
+          if equipment_id=$(echo "$equipment_id" | tr -d '[:space:]'); then
+          if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
+            echo "Invalid Equipment ID format. Please use the format: E0001"
+            sleep 2
+            tput cuu 2
+            tput ed
+            continue
+          fi
+            if ! grep -q ":$equipment_id:" Equipment.txt; then
+              echo "No equipment found with ID: $equipment_id"
+              sleep 2
+              tput cuu 2
+              tput ed
+              continue
+          fi
+          fi
+        fi
 
+      
+        # Find the matching record and extract fields
+        record=$(grep ":$equipment_id:" Equipment.txt)
+        # Get info from information field separator
+        IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<< "$record"
 
+        # Prompt for new values
+        while true; do
+          read -rp "New Serial Number: " new_serial
+          if [[ -n $new_serial ]]; then
+            if [[ ! "$new_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
+              echo "Invalid Serial Number format. Keeping current value."
+              sleep 2
+              tput cuu 1
+              tput ed
+              new_serial=""
+              
+            fi
+          fi
+          break
+        done
+
+        while true; do
+          read -rp "New Type: " new_type
+          if [[ -n $new_type ]]; then
+            if [[ ! "$new_type" == "keyboard" && ! "$new_type" == "mouse" && ! "$new_type" == "monitor" && ! "$new_type" == "webcam" && ! "$new_type" == "mousepad" && ! "$new_type" == "laptop" ]]; then
+              echo "Invalid equipment type. Keeping current value."
+              sleep 2
+              tput cuu 1
+              tput ed
+              new_type=""
+            fi
+          fi
+          break
+        done
+
+        while true; do
+          read -rp "New Model: " new_model
+          if [[ -n $new_model ]]; then
+            if [[ ! "$new_model" =~ ^[A-Za-z0-9\ ]+$ ]]; then
+              echo "Invalid Model format. Keeping current value."
+              sleep 2
+              tput cuu 1
+              tput ed
+              new_model=""
+
+            fi
+          fi
+          break
+        done
+
+        while true; do
+          read -rp "New Status: " new_status
+          if [[ -n $new_status ]]; then
+            if [[ ! "$new_status" == "Available" && ! "$new_status" == "Unavailable" ]]; then
+              echo "Invalid status. Keeping current value."
+              sleep 2
+              tput cuu 1
+              tput ed
+              new_status=""
+              break
+            fi
+          fi
+          break
+        done
+
+        # Purchase Date with format validation
+          while true; do
+            read -rp "New Purchase Date: " new_purchase_date
+            if [[ -z "$new_purchase_date" ]]; then
+              break
+            fi
+            if validate_date "$new_purchase_date" "Invalid purchase date." "MM-DD-YYYY"; then
+              break
+            else
+              echo "Please try again or leave empty to keep current date."
+            fi
+            break
+          done
+
+        # Warranty Date with format validation
+          while true; do
+            read -rp "New Warranty Date: " new_expiry_date
+            if [[ -z "$new_expiry_date" ]]; then
+              break
+            fi
+            if validate_date "$new_expiry_date" "Invalid warranty date." "MM-DD-YYYY"; then
+              sleep 2
+              tput cuu 2
+              tput ed
+              continue
+            fi
+
+            # Check if warranty is at least 30 days after purchase
+              purchase_check_date=${new_purchase_date:-$eq_purchase_date}
+              purchase_iso=$(convert_date_format "$purchase_check_date" "MM-DD-YYYY" "YYYY-MM-DD")
+              warranty_iso=$(convert_date_format "$new_expiry_date" "MM-DD-YYYY" "YYYY-MM-DD")
+              
+              
+              if purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) && 
+                warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
+                echo "Error processing dates. Please try again."
+              fi
+                difference_days=$(( (warranty_date_seconds - purchase_date_seconds) / 86400 ))
+                if (( difference_days >= 30 )); then
+                  echo "Warranty date must be at least 30 days after purchase date."
+                  continue
+                fi
+                break
+          done
+     
+
+        # Update fields if new values are provided
+        [[ -n $new_type ]] && eq_type=$new_type
+        [[ -n $new_model ]] && eq_model=$new_model
+        [[ -n $new_serial ]] && eq_serial=$new_serial
+        [[ -n $new_status ]] && eq_status=$new_status
+        [[ -n $new_purchase_date ]] && eq_purchase_date=$new_purchase_date
+        [[ -n $new_expiry_date ]] && eq_expiry_date=$new_expiry_date
+
+        # Create updated record
+        updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
+
+        # Replace old record with updated record
+        sed -i "s|^$record|$updated_record|" Equipment.txt
+
+        confirmation
+if [[ $update_another == "Y" ]]; then
+      update_equipment
+  
+elif [[ $update_another == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
+        sleep 2
+        break
+      else
+        echo "Invalid choice, please enter either y or q"
+        sleep 2
+        tput cuu 3
+        tput ed
+        printf '\n'
+        confirmation
+    fi
+done
 }
+
 
 #========================================Task 5========================================
 # Task 5: Implement Delete Equipment function
