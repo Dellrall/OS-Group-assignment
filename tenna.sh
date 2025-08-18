@@ -3,8 +3,8 @@
 # tenna.sh made by Lye Wei Lun
 
 # Enable alternate screen buffer
-#tput smcup             # Save current terminal content and switch to alternate buffer
-#trap 'tput rmcup' EXIT # Restore original terminal content on exit
+tput smcup             # Save current terminal content and switch to alternate buffer
+trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
@@ -274,7 +274,7 @@ add_equipment() {
               purchase_iso=$(echo "${equipment_purchase_date}" | awk -F'-' '{print $3"-"$1"-"$2}')
               warranty_iso=$(echo "${equipment_expiry_date}" | awk -F'-' '{print $3"-"$1"-"$2}')
           # Convert dates to seconds since epoch for comparison
-           if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) || 
+          if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) || 
               ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
               echo "Error processing dates."
               sleep 2
@@ -297,12 +297,17 @@ add_equipment() {
             break
           done
 
+        # Convert dates to backend format
+        purchase_backend=$(convert_date_format "$equipment_purchase_date" "MM-DD-YYYY" "YYYY-MM-DD")
+        expiry_backend=$(convert_date_format "$equipment_expiry_date" "MM-DD-YYYY" "YYYY-MM-DD")
+
+
         if [ ! -f Equipment.txt ]; then
           touch Equipment.txt
           echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >> Equipment.txt
-          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$equipment_purchase_date:$equipment_expiry_date" >> Equipment.txt
+          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >> Equipment.txt
         else
-          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$equipment_purchase_date:$equipment_expiry_date" >> Equipment.txt
+          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >> Equipment.txt
         fi
 
         #Return or add new equipment
@@ -327,20 +332,20 @@ done
 
 # Search Equipment
 search_equipment() {
-  clear
   search_another="Y"
   confirmation() {
     read -rp "Search another Equipment? (y)es or (q)uit: " search_another
     search_another=${search_another^^}
   }
 
-
+clear
 printf '%s\n\n' "Search Equipment"
 while [[ "$search_another" == "Y" ]]; do
+
   if [ ! -f Equipment.txt ]; then
     echo "No equipment registered yet, please register equipment first."
     echo "-------------------------------------------------------------------------"
-    sleep 4
+    sleep 1
     break
   fi
     
@@ -387,7 +392,6 @@ while [[ "$search_another" == "Y" ]]; do
 elif [[ $search_another == "Q" ]]; then
             echo "Returning to Equipment Maintenance Menu...."
             sleep 2
-            break
         else
             echo "Invalid choice, please enter either y or q"
             sleep 2
@@ -396,7 +400,7 @@ elif [[ $search_another == "Q" ]]; then
             printf '\n'
             confirmation
     fi
-done
+  done
 }
 
 #========================================Task 4========================================
@@ -411,39 +415,38 @@ update_equipment() {
     update_another=${update_another^^}
   }
 
-  printf '%s\n\n' "Update Equipment Details"
+printf '%s\n\n' "Update Equipment Details"
 while [[ $update_another == "Y" ]]; do
     if [ ! -f Equipment.txt ]; then
         echo "No equipment registered yet, please register equipment first."
         echo "-------------------------------------------------------------------------"
-        sleep 4
+        sleep 1
         break
       fi
-      read -rp "Enter Equipment ID: " equipment_id
+
+
+      read -rp "Enter Equipment ID: " EquipID
       echo "-------------------------------------------------------------------------"
         # Check if equipment exists
-        if null_check "$equipment_id" "Equipment ID"; then
-          if equipment_id=$(echo "$equipment_id" | tr -d '[:space:]'); then
-          if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
+        if null_check "$EquipID" "Equipment ID"; then
+          if [[ ! "$EquipID" =~ ^[E][0-9]{4}$ ]]; then
             echo "Invalid Equipment ID format. Please use the format: E0001"
             sleep 2
-            tput cuu 2
+            tput cuu 3
             tput ed
             continue
-          fi
-            if ! grep -q ":$equipment_id:" Equipment.txt; then
-              echo "No equipment found with ID: $equipment_id"
+          elif ! grep -q "$EquipID:" Equipment.txt; then
+              echo "No equipment found with ID: $EquipID"
               sleep 2
-              tput cuu 2
+              tput cuu 3
               tput ed
               continue
           fi
-          fi
-        fi
+  
 
       
         # Find the matching record and extract fields
-        record=$(grep ":$equipment_id:" Equipment.txt)
+        record=$(grep "$EquipID:" Equipment.txt)
         # Get info from information field separator
         IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<< "$record"
 
@@ -457,9 +460,11 @@ while [[ $update_another == "Y" ]]; do
               tput cuu 1
               tput ed
               new_serial=""
-              
+          elif grep -q "$new_serial:" Equipment.txt; then
+              echo "Duplicate Serial in another record. Ignoring."
+              new_serial=""
+              fi
             fi
-          fi
           break
         done
 
@@ -486,7 +491,6 @@ while [[ $update_another == "Y" ]]; do
               tput cuu 1
               tput ed
               new_model=""
-
             fi
           fi
           break
@@ -513,7 +517,7 @@ while [[ $update_another == "Y" ]]; do
             if [[ -z "$new_purchase_date" ]]; then
               break
             fi
-            if validate_date "$new_purchase_date" "Invalid purchase date." "MM-DD-YYYY"; then
+            if validate_date "$new_purchase_date" "Invalid purchase date." "YYYY-MM-DD"; then
               break
             else
               echo "Please try again or leave empty to keep current date."
@@ -527,17 +531,15 @@ while [[ $update_another == "Y" ]]; do
             if [[ -z "$new_expiry_date" ]]; then
               break
             fi
-            if validate_date "$new_expiry_date" "Invalid warranty date." "MM-DD-YYYY"; then
-              sleep 2
-              tput cuu 2
-              tput ed
-              continue
+            if validate_date "$new_expiry_date" "Invalid warranty date." "YYYY-MM-DD"; then
+            sleep 2
+              break
             fi
 
             # Check if warranty is at least 30 days after purchase
               purchase_check_date=${new_purchase_date:-$eq_purchase_date}
-              purchase_iso=$(convert_date_format "$purchase_check_date" "MM-DD-YYYY" "YYYY-MM-DD")
-              warranty_iso=$(convert_date_format "$new_expiry_date" "MM-DD-YYYY" "YYYY-MM-DD")
+              purchase_iso="$purchase_check_date"
+              warranty_iso="$new_expiry_date"
               
               
               if purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) && 
@@ -565,15 +567,14 @@ while [[ $update_another == "Y" ]]; do
         updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
 
         # Replace old record with updated record
-        sed -i "s|^$record|$updated_record|" Equipment.txt
+        sed -i "s/^$EquipID:.*/$updated_record/" Equipment.txt
 
+        printf '\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
         confirmation
-if [[ $update_another == "Y" ]]; then
-      update_equipment
-  
+
 elif [[ $update_another == "Q" ]]; then
-        echo "Returning to Equipment Maintenance Menu...."
         sleep 2
+        printf '%s\n' "Returning to Equipment Maintenance Menu...."
         break
       else
         echo "Invalid choice, please enter either y or q"
@@ -583,6 +584,7 @@ elif [[ $update_another == "Q" ]]; then
         printf '\n'
         confirmation
     fi
+    
 done
 }
 
@@ -592,8 +594,15 @@ done
 
 # Delete Equipment
 delete_equipment() {
-  echo "nothing"
+  clear
+  delete_another="Y"
+  confirmation() {
+    read -rp "Delete another Equipment? (y)es or (q)uit: " delete_another
+    delete_another=${delete_another^^}
+  }
 
+  printf '%s\n\n' "Delete Equipment Details"
+ 
 }
 
 #========================================Task 6========================================
