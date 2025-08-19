@@ -1,3 +1,7 @@
 ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate
 E0002:keyboard:Keychron V2:AB000000002:Available:2025-08-17:2045-12-31
 E0003:mouse:Vasper:AB123456789:Available:2025-08-18:2026-12-25
+E0004:mouse:Logitech:AB123425544:Available:2025-08-19:2026-04-25
+E0005:keyboard:Logitech:AB123456877:Unavailable:2025-08-19:2040-08-19
+E0006:laptop:Dell:PE233323333:Available:2012-12-12:2013-12-12
+E0007:keyboard:Logitech:PC123456798:Available:2025-08-19:2100-12-23

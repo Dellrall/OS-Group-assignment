@@ -3,8 +3,8 @@
 # tenna.sh made by Lye Wei Lun
 
 # Enable alternate screen buffer
-tput smcup             # Save current terminal content and switch to alternate buffer
-trap 'tput rmcup' EXIT # Restore original terminal content on exit
+#tput smcup             # Save current terminal content and switch to alternate buffer
+#trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
@@ -300,12 +300,14 @@ add_equipment() {
       if [ ! -f Equipment.txt ]; then
         touch Equipment.txt
         if  grep -q "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" Equipment.txt; then
-          echo "Equipment.txt already exists, skipping header."
+          echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >>Equipment.txt
           echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
-          fi
-        else
-        echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >>Equipment.txt
-        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
+        fi
+
+      else
+        echo -n ""
+        echo "Equipment.txt already exists, new field added"
+        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt 
       fi
 
       #Return or add new equipment
@@ -382,12 +384,11 @@ search_equipment() {
       echo "-------------------------------------------------------------------------"
 
       printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-      read -rp "Search another Equipment? (y)es or (q)uit: " search_another
-      search_another=${search_another^^}
+      confirmation
 
     elif [[ $search_another == "Q" ]]; then
       echo "Returning to Equipment Maintenance Menu...."
-      sleep 2
+      sleep 1
     else
       echo "Invalid choice, please enter either y or q"
       sleep 2
@@ -566,7 +567,6 @@ update_equipment() {
     elif [[ $update_another == "Q" ]]; then
       sleep 2
       printf '%s\n' "Returning to Equipment Maintenance Menu...."
-      break
     else
       echo "Invalid choice, please enter either y or q"
       sleep 2
@@ -585,14 +585,13 @@ update_equipment() {
 # Delete Equipment
 delete_equipment() {
   clear
-  delete_another="Y"
   confirmation() {
     read -rp "Delete another Equipment? (y)es or (q)uit: " delete_another
     delete_another=${delete_another^^}
   }
 
   printf '%s\n\n' "Delete Equipment Details"
-  while [[ "$delete_another" == "Y" ]]; do
+  while true; do
     if [[ ! -f Equipment.txt ]]; then
       echo "Equipment file not found, unable to delete."
       echo "-------------------------------------------------------------------------"
@@ -652,105 +651,226 @@ delete_equipment() {
         delete_equipment
       elif [[ $delete_another == "Q" ]]; then
         sleep 2
-        printf '%s\n' "Exiting program..."
-        break
+        printf '%s\n' "Returning to Equipment Maintenance Menu...."
       fi
   done
 }
 
 #========================================Task 6========================================
 
-# Sort and display Equipment.txt by a named field, printing each record vertically
-sort_and_display() {
-  local field="${1,,}"   # field name (case-insensitive)
-  local label_w=15       # width for the left label column (adjust)
-  local sep=" : "        # separator between label and value
-  local col
-
-  case "$field" in
-    id) col=1 ;;
-    type) col=2 ;;
-    model) col=3 ;;
-    serial) col=4 ;;
-    status) col=5 ;;
-    purchase|purchase_date) col=6 ;;
-    warranty|warranty_date) col=7 ;;
-    *) printf 'Unknown field: %s\n' "$field"; return 1 ;;
-  esac
-
-  # skip header line if present, sort case-insensitive by chosen column
-  if [[ ! -f Equipment.txt ]]; then
-    echo "Equipment.txt not found"
-    return 1
-  fi
-
-  tail -n +2 Equipment.txt 2>/dev/null | sort -t: -k"${col}","${col}" -f | \
-  while IFS=: read -r id type model serial status purchase warranty; do
-    printf "%-${label_w}s%s%s\n" "Equipment ID" "$sep" "$id"
-    printf "%-${label_w}s%s%s\n" "Type" "$sep" "$type"
-    printf "%-${label_w}s%s%s\n" "Model" "$sep" "$model"
-    printf "%-${label_w}s%s%s\n" "Serial" "$sep" "$serial"
-    printf "%-${label_w}s%s%s\n" "Status" "$sep" "$status"
-    printf "%-${label_w}s%s%s\n" "Purchase Date" "$sep" "$purchase"
-    printf "%-${label_w}s%s%s\n" "Warranty Date" "$sep" "$warranty"
-    printf '%*s\n' "$((label_w+${#sep}+40))" '' | tr ' ' '-'  # separator line (adjust length)
-  done
-}
+# Sort and display Equipment.txt by a named field, printing each record Horizontally
 
 #--------------------------------------------------------------------------------------
 
 # Sort by Model
 sort_by_model() {
-  clear
-  confirmation(){
-    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
-    choice=${choice^^}
+  export_file() { 
+    out_file="Report_By_Model.txt"
+    {
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
+      for line in "${rows[@]}"; do
+        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
+        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$warranty"
+      done
+    } > "$out_file"
+    echo "Exported to $out_file"
   }
-  printf '%s\n\n' "Equipment details sorted by Model"
-   if [[ ! -f Equipment.txt ]]; then
-      echo "Equipment file not found, unable to delete."
-      echo "-------------------------------------------------------------------------"
-      sleep 2
-      break
-    fi
 
+  clear
+  printf '\n%s\n\n' "Equipment Details Sorted By Model"
+
+  if [[ ! -f Equipment.txt ]]; then
+    echo "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
+
+  # Get all rows (skip header if present), sort by Model (col 3)
+  mapfile -t rows < <(
+    awk -F: 'NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} {print}' Equipment.txt \
+      | sort -t: -k3,3 -f
+  )
+
+  if ((${#rows[@]} == 0)); then
+    echo "No equipment found."
+    return
+  fi
+
+  printf '%-20s %-15s %-12s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Status  |" "|  Warranty Date  |"
+  printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+  for row in "${rows[@]}"; do
+    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
+    printf '\n%-20s %-20s %-15s %-22s %-16s %-20s'  "  $model" "$id" "$type" "$serial" "$status" "$warranty"
+  done
+
+  printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
   
-    # Call the sort_and_display function with "model" as the field
-    sort_and_display "model"
-
-    printf '\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-
-    confirmation
-    if [[ $choice == "Y" ]]; then
-      echo "nothing"
-    elif [[ $choice == "Q" ]]; then
-      sleep 2
-      printf '%s\n' "Returning to Equipment Maintenance Menu..."
-      break
-    else
-      echo "Invalid choice, please enter either y or q"
-      sleep 2
-      tput cuu 3
-      tput ed
-      printf '\n'
-      confirmation
-    fi
-  
-
+  read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+  choice=${choice^^}
+  if [[ "$choice" == "Y" ]]; then
+    export_file
+  elif [[ "$choice" == "Q" ]]; then
+    echo "Returning to Equipment Maintenance Menu...."
+    sleep 2
+  else
+    echo "Invalid choice, please enter either y or q"
+    sleep 2
+    tput cuu 3
+    tput ed
+    printf '\n'
+  fi
 }
+
 #--------------------------------------------------------------------------------------
 # Sort by Status
 sort_by_status() {
+  export_file() { 
+   out_file="Report_By_Status_${EqStatus// /_}.txt"
+    {
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
+      for line in "${rows[@]}"; do
+        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
+        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_type" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
+      done
+    } > "$out_file"
+    echo "Exported to $out_file"
+    }
+  clear
+  printf '\n%s\n\n' "Equipment Details Sorted By Status"
 
-  echo "nothing"
+if  [[ ! -f Equipment.txt ]]; then
+  echo -n "Equipment file not found, please add equipment first."
+  echo "-------------------------------------------------------------------------------"
+fi
+ 
+  while true; do
+   read -rp "Enter Equipment Status: " EqStatus
+   EqStatus=${EqStatus^} # Convert to uppercase for case-insensitive comparison
+   echo "-------------------------------------------------------------------------------"
+  if null_check "$EqStatus" "Equipment Status"; then
+    if [[ ! "$EqStatus" == "Unavailable" &&  ! "$EqStatus" == "Available" ]]; then
+      echo "Invalid equipment status. Please enter a valid status."
+      sleep 2
+      tput cuu 3
+      tput ed
+      continue
+    fi
+  fi
+       # Get matching rows (skip header if present), case-insensitive match on 2nd field, sort by Model (col 3)
+  mapfile -t rows < <(
+    awk -F: -v t="$EqStatus" 'NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $5==t{print}' Equipment.txt \
+      | sort -t: -k3,3 -f
+  )
+   if ((${#rows[@]} == 0)); then
+    echo "No equipment found for status: $EqStatus"
+    sleep 2
+    tput cuu 3
+    tput ed
+    continue
+  fi
+      printf '%-10s %-15s %-15s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Purchase Date  |" "|  Warranty Date  |"
+      printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────" 
+      for row in "${rows[@]}"; do
+        IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
+        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_type" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
+      done  
+      printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
 
+      read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+      choice=${choice^^}
+      if [[ "$choice" == "Y" ]]; then
+      export_file
+      break
+      elif [[ "$choice" == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
+        sleep 2
+        break
+      else
+        echo "Invalid choice, please enter either y or q"
+        sleep 2
+        tput cuu 3
+        tput ed
+        printf '\n'
+      fi
+
+    done
+  
 }
 #--------------------------------------------------------------------------------------
 # Sort by Type
 sort_by_type() {
+  export_file() { 
+   out_file="Report_By_Type_${EquipType// /_}.txt"
+    {
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
+      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
+      for line in "${rows[@]}"; do
+        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
+        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$warranty"
+      done
+    } > "$out_file"
+    echo "Exported to $out_file"
+    }
+  clear
+  printf '\n%s\n\n' "Equipment Details Sorted By Type"
 
-  echo "nothing"
+if  [[ ! -f Equipment.txt ]]; then
+  echo -n "Equipment file not found, please add equipment first."
+  echo "-------------------------------------------------------------------------------"
+fi
+ 
+  while true; do
+   read -rp "Enter equipment Type: " EquipType
+   echo "-------------------------------------------------------------------------------"
+  if null_check "$EquipType" "Equipment Type"; then
+    if [[ ! "$EquipType" == "keyboard" && ! "$EquipType" == "mouse" && ! "$EquipType" == "monitor" && ! "$EquipType" == "webcam" && ! "$EquipType" == "mousepad" && ! "$EquipType" == "laptop" ]]; then
+      echo "Invalid equipment type. Please enter a valid type."
+      sleep 2
+      tput cuu 3
+      tput ed
+      continue
+    fi
+  fi
+       # Get matching rows (skip header if present), case-insensitive match on 2nd field, sort by Model (col 3)
+  mapfile -t rows < <(
+    awk -F: -v t="$EquipType" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $2==t{print}' Equipment.txt \
+      | sort -t: -k3,3 -f
+  )
+   if ((${#rows[@]} == 0)); then
+    echo "No equipment found for type: $EquipType"
+    sleep 2
+    tput cuu 3
+    tput ed
+    continue
+  fi
+      printf '%-10s %-15s %-15s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Status  |" "|  Serial Number  |" "|  Purchase Date  |" "|  Warranty Date  |"
+      printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────" 
+      for row in "${rows[@]}"; do
+        IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
+        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_status" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
+      done  
+      printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
 
+      read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+      choice=${choice^^}
+      if [[ "$choice" == "Y" ]]; then
+      export_file
+      break
+      elif [[ "$choice" == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
+        sleep 2
+        break
+      else
+        echo "Invalid choice, please enter either y or q"
+        sleep 2
+        tput cuu 3
+        tput ed
+        printf '\n'
+      fi
+
+    done
 }
 #--------------------------------------------------------------------------------------
 
@@ -785,9 +905,10 @@ main_menu() {
     D) delete_equipment ;;
     M) sort_by_model ;;
     T) sort_by_status ;;
+    P) sort_by_type ;;
     Q)
-      echo "Exiting program..."
-      sleep 2
+      echo "Program will exit in 1 second..."
+      sleep 1
       break
       ;;
     *) echo "Invalid option. Try again." ;;
