@@ -1,4 +1,3 @@
 ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate
-E0001:mouse:Mouser:AB000000001:Available:2025-08-17:2026-12-31
 E0002:keyboard:Keychron V2:AB000000002:Available:2025-08-17:2045-12-31
 E0003:mouse:Vasper:AB123456789:Available:2025-08-18:2026-12-25
