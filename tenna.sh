@@ -702,6 +702,10 @@ sort_and_display() {
 # Sort by Model
 sort_by_model() {
   clear
+  confirmation(){
+    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+    choice=${choice^^}
+  }
   printf '%s\n\n' "Equipment details sorted by Model"
    if [[ ! -f Equipment.txt ]]; then
       echo "Equipment file not found, unable to delete."
@@ -710,25 +714,13 @@ sort_by_model() {
       break
     fi
 
-    read -rp "Enter Equipment ID to delete: " EquipID
-    echo "-------------------------------------------------------------------------"
-    if ! [[ $EquipID =~ ^E[0-9]{4}$ ]]; then
-        echo "Invalid Equipment ID format. Please use the format: E0001"
-        sleep 2
-        tput cuu 4
-        tput ed
-        continue
-    elif ! grep -q "^$EquipID:" Equipment.txt; then
-        echo "No equipment found with ID: $EquipID"
-        sleep 2
-        tput cuu 2
-        tput ed
-        continue
-    fi
-  read -rp "Equipment ID: " EquipID
+  
+    # Call the sort_and_display function with "model" as the field
+    sort_and_display "model"
 
-  sort_and_display "model"
+    printf '\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
 
+    confirmation
     if [[ $choice == "Y" ]]; then
       echo "nothing"
     elif [[ $choice == "Q" ]]; then
