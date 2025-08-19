@@ -3,8 +3,8 @@
 # tenna.sh made by Lye Wei Lun
 
 # Enable alternate screen buffer
-#tput smcup             # Save current terminal content and switch to alternate buffer
-#trap 'tput rmcup' EXIT # Restore original terminal content on exit
+tput smcup             # Save current terminal content and switch to alternate buffer
+trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
@@ -760,7 +760,7 @@ fi
   fi
        # Get matching rows (skip header if present), case-insensitive match on 2nd field, sort by Model (col 3)
   mapfile -t rows < <(
-    awk -F: -v t="$EqStatus" 'NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $5==t{print}' Equipment.txt \
+    awk -F: -v t="$EqStatus" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $5==t{print}' Equipment.txt \
       | sort -t: -k3,3 -f
   )
    if ((${#rows[@]} == 0)); then
