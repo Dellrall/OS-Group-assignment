@@ -660,9 +660,90 @@ delete_equipment() {
 
 #========================================Task 6========================================
 
+# Sort and display Equipment.txt by a named field, printing each record vertically
+sort_and_display() {
+  local field="${1,,}"   # field name (case-insensitive)
+  local label_w=15       # width for the left label column (adjust)
+  local sep=" : "        # separator between label and value
+  local col
+
+  case "$field" in
+    id) col=1 ;;
+    type) col=2 ;;
+    model) col=3 ;;
+    serial) col=4 ;;
+    status) col=5 ;;
+    purchase|purchase_date) col=6 ;;
+    warranty|warranty_date) col=7 ;;
+    *) printf 'Unknown field: %s\n' "$field"; return 1 ;;
+  esac
+
+  # skip header line if present, sort case-insensitive by chosen column
+  if [[ ! -f Equipment.txt ]]; then
+    echo "Equipment.txt not found"
+    return 1
+  fi
+
+  tail -n +2 Equipment.txt 2>/dev/null | sort -t: -k"${col}","${col}" -f | \
+  while IFS=: read -r id type model serial status purchase warranty; do
+    printf "%-${label_w}s%s%s\n" "Equipment ID" "$sep" "$id"
+    printf "%-${label_w}s%s%s\n" "Type" "$sep" "$type"
+    printf "%-${label_w}s%s%s\n" "Model" "$sep" "$model"
+    printf "%-${label_w}s%s%s\n" "Serial" "$sep" "$serial"
+    printf "%-${label_w}s%s%s\n" "Status" "$sep" "$status"
+    printf "%-${label_w}s%s%s\n" "Purchase Date" "$sep" "$purchase"
+    printf "%-${label_w}s%s%s\n" "Warranty Date" "$sep" "$warranty"
+    printf '%*s\n' "$((label_w+${#sep}+40))" '' | tr ' ' '-'  # separator line (adjust length)
+  done
+}
+
+#--------------------------------------------------------------------------------------
+
 # Sort by Model
 sort_by_model() {
-  echo "nothing"
+  clear
+  printf '%s\n\n' "Equipment details sorted by Model"
+   if [[ ! -f Equipment.txt ]]; then
+      echo "Equipment file not found, unable to delete."
+      echo "-------------------------------------------------------------------------"
+      sleep 2
+      break
+    fi
+
+    read -rp "Enter Equipment ID to delete: " EquipID
+    echo "-------------------------------------------------------------------------"
+    if ! [[ $EquipID =~ ^E[0-9]{4}$ ]]; then
+        echo "Invalid Equipment ID format. Please use the format: E0001"
+        sleep 2
+        tput cuu 4
+        tput ed
+        continue
+    elif ! grep -q "^$EquipID:" Equipment.txt; then
+        echo "No equipment found with ID: $EquipID"
+        sleep 2
+        tput cuu 2
+        tput ed
+        continue
+    fi
+  read -rp "Equipment ID: " EquipID
+
+  sort_and_display "model"
+
+    if [[ $choice == "Y" ]]; then
+      echo "nothing"
+    elif [[ $choice == "Q" ]]; then
+      sleep 2
+      printf '%s\n' "Returning to Equipment Maintenance Menu..."
+      break
+    else
+      echo "Invalid choice, please enter either y or q"
+      sleep 2
+      tput cuu 3
+      tput ed
+      printf '\n'
+      confirmation
+    fi
+  
 
 }
 #--------------------------------------------------------------------------------------
