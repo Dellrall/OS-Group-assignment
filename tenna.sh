@@ -299,9 +299,12 @@ add_equipment() {
 
       if [ ! -f Equipment.txt ]; then
         touch Equipment.txt
+        if  grep -q "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" Equipment.txt; then
+          echo "Equipment.txt already exists, skipping header."
+          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
+          fi
+        else
         echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >>Equipment.txt
-        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
-      else
         echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
       fi
 
