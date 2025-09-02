@@ -732,7 +732,7 @@ sort_by_status() {
       printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
       for line in "${rows[@]}"; do
         IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_type" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
+        printf '\n%-30s %-12s %-10s %-18s %-12s %-12s' "$model" "$id" "$type" "$serial" "$status" "$warranty"
       done
     } > "$out_file"
     echo "Exported to $out_file"
