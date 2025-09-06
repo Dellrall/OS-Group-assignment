@@ -131,6 +131,135 @@ convert_date_format() {
     ;;
   esac
 }
+
+#--------------------------------------------------------------------------------------
+# Responsive Table Formatting Function
+format_equipment_table() {
+  local -a data_rows=("$@")
+  local include_purchase_date=${INCLUDE_PURCHASE_DATE:-false}
+  
+  # Get terminal width, default to 120 if not available
+  local term_width
+  term_width=$(tput cols 2>/dev/null || echo "120")
+  
+  # Define column headers
+  local headers=("Model" "Equipment ID" "Type" "Serial Number" "Status")
+  if [[ "$include_purchase_date" == "true" ]]; then
+    headers+=("Purchase Date" "Warranty Date")
+  else
+    headers+=("Warranty Date")
+  fi
+  
+  # Calculate maximum width for each column based on data
+  local -a max_widths=()
+  local col_count=${#headers[@]}
+  
+  # Initialize with header lengths
+  for i in "${!headers[@]}"; do
+    max_widths[i]=${#headers[i]}
+  done
+  
+  # Check data for maximum widths
+  for row in "${data_rows[@]}"; do
+    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
+    
+    # Convert dates for display
+    local display_purchase display_warranty
+    display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+    
+    # Create data array in display order
+    local -a row_data=("$model" "$id" "$type" "$serial" "$status")
+    if [[ "$include_purchase_date" == "true" ]]; then
+      row_data+=("$display_purchase" "$display_warranty")
+    else
+      row_data+=("$display_warranty")
+    fi
+    
+    # Update maximum widths
+    for i in "${!row_data[@]}"; do
+      if [[ ${#row_data[i]} -gt ${max_widths[i]} ]]; then
+        max_widths[i]=${#row_data[i]}
+      fi
+    done
+  done
+  
+  # Calculate total width needed (including separators)
+  local total_width=0
+  for width in "${max_widths[@]}"; do
+    total_width=$((total_width + width + 3)) # +3 for " | "
+  done
+  total_width=$((total_width - 3)) # Remove last separator
+  
+  # Adjust column widths if total exceeds terminal width
+  if [[ $total_width -gt $term_width ]]; then
+    # Apply responsive scaling using bash arithmetic
+    local available_width=$((term_width - (col_count - 1) * 3)) # Account for separators
+    
+    # Simple proportional scaling without bc
+    for i in "${!max_widths[@]}"; do
+      local scaled_width=$((max_widths[i] * available_width / total_width))
+      
+      # Set minimum widths based on column type
+      case $i in
+        0) max_widths[i]=$((scaled_width < 12 ? 12 : scaled_width)) ;; # Model
+        1) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Equipment ID
+        2) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Type
+        3) max_widths[i]=$((scaled_width < 10 ? 10 : scaled_width)) ;;  # Serial Number
+        4) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Status
+        *) max_widths[i]=$((scaled_width < 10 ? 10 : scaled_width)) ;; # Dates
+      esac
+    done
+  fi
+  
+  # Generate format string
+  local format_str=""
+  local separator_str=""
+  for i in "${!max_widths[@]}"; do
+    format_str+="%-${max_widths[i]}s"
+    separator_str+="$(printf '%*s' "${max_widths[i]}" '' | tr ' ' '-')"
+    if [[ $i -lt $((col_count - 1)) ]]; then
+      format_str+=" | "
+      separator_str+=" | "
+    fi
+  done
+  format_str+="\n"
+  separator_str+="\n"
+  
+  # Print table header
+  printf "$format_str" "${headers[@]}"
+  printf "$separator_str"
+  
+  # Print data rows
+  for row in "${data_rows[@]}"; do
+    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
+    
+    # Convert dates for display
+    local display_purchase display_warranty
+    display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+    
+    # Truncate fields if they exceed column width
+    model=${model:0:${max_widths[0]}}
+    id=${id:0:${max_widths[1]}}
+    type=${type:0:${max_widths[2]}}
+    serial=${serial:0:${max_widths[3]}}
+    status=${status:0:${max_widths[4]}}
+    
+    # Create data array in display order
+    local -a row_data=("$model" "$id" "$type" "$serial" "$status")
+    if [[ "$include_purchase_date" == "true" ]]; then
+      display_purchase=${display_purchase:0:${max_widths[5]}}
+      display_warranty=${display_warranty:0:${max_widths[6]}}
+      row_data+=("$display_purchase" "$display_warranty")
+    else
+      display_warranty=${display_warranty:0:${max_widths[5]}}
+      row_data+=("$display_warranty")
+    fi
+    
+    printf "$format_str" "${row_data[@]}"
+  done
+}
 #--------------------------------------------------------------------------------------
 # Null check function
 null_check() {
@@ -697,13 +826,8 @@ sort_by_model() {
   export_file() { 
     out_file="Report_By_Model.txt"
     {
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
-      for line in "${rows[@]}"; do
-        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
-        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$display_warranty"
-      done
+      # Use the formatting function for consistent export
+      INCLUDE_PURCHASE_DATE=false format_equipment_table "${rows[@]}"
     } > "$out_file"
     echo "Exported to $out_file"
   }
@@ -728,14 +852,8 @@ sort_by_model() {
     return
   fi
 
-  printf '%-20s %-15s %-12s %-25s %-15s %-20s\n' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Status  |" "|  Warranty Date  |"
-  printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
-  for row in "${rows[@]}"; do
-    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
-    # Convert dates for display
-    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
-    printf '%-20s %-20s %-15s %-22s %-16s %-20s\n'  "  $model" "$id" "$type" "$serial" "$status" "$display_warranty"
-  done
+  # Use the responsive formatting function
+  INCLUDE_PURCHASE_DATE=false format_equipment_table "${rows[@]}"
 
   echo
   read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
@@ -758,14 +876,8 @@ sort_by_status() {
   export_file() { 
    out_file="Report_By_Status_${EqStatus// /_}.txt"
     {
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "-----" "-----------" "----" "-------------" "------" "-------------" "------------"
-      for line in "${rows[@]}"; do
-        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
-        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
-        printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$model" "$id" "$type" "$serial" "$status" "$display_purchase" "$display_warranty"
-      done
+      # Use the formatting function for consistent export with purchase date
+      INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
     } > "$out_file"
     echo "Exported to $out_file"
     }
@@ -805,15 +917,10 @@ sort_by_status() {
       continue
     fi
     
-    printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
-    printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
-    for row in "${rows[@]}"; do
-      IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
-      # Convert dates for display
-      display_purchase=$(convert_date_format "$eq_purchase_date" "YYYY-MM-DD" "MM-DD-YYYY")
-      display_warranty=$(convert_date_format "$eq_expiry_date" "YYYY-MM-DD" "MM-DD-YYYY")
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$eq_model" "$eq_id" "$eq_type" "$eq_serial" "$eq_status" "$display_purchase" "$display_warranty"
-    done  
+    printf '\n%s: %s\n\n' "Equipment Details Sorted By Status" "$EqStatus"
+    
+    # Use the responsive formatting function with purchase date included
+    INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
     
     echo
     read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
@@ -839,14 +946,8 @@ sort_by_type() {
   export_file() { 
    out_file="Report_By_Type_${EquipType// /_}.txt"
     {
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "-----" "-----------" "----" "-------------" "------" "-------------" "------------"
-      for line in "${rows[@]}"; do
-        IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
-        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
-        printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$model" "$id" "$type" "$serial" "$status" "$display_purchase" "$display_warranty"
-      done
+      # Use the formatting function for consistent export with purchase date
+      INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
     } > "$out_file"
     echo "Exported to $out_file"
     }
@@ -886,15 +987,10 @@ sort_by_type() {
       continue
     fi
     
-    printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
-    printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
-    for row in "${rows[@]}"; do
-      IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
-      # Convert dates for display
-      display_purchase=$(convert_date_format "$eq_purchase_date" "YYYY-MM-DD" "MM-DD-YYYY")
-      display_warranty=$(convert_date_format "$eq_expiry_date" "YYYY-MM-DD" "MM-DD-YYYY")
-      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$eq_model" "$eq_id" "$eq_type" "$eq_serial" "$eq_status" "$display_purchase" "$display_warranty"
-    done  
+    printf '\n%s: %s\n\n' "Equipment Details Sorted By Type" "$EquipType"
+    
+    # Use the responsive formatting function with purchase date included
+    INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
     
     echo
     read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
