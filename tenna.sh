@@ -369,7 +369,7 @@ add_equipment() {
   clear
   choice="Y"
   confirmation() {
-    echo -n "${CYAN_HIGHLIGHT}Add another new Equipment details? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
+    printf "${CYAN_HIGHLIGHT}Add another new Equipment details? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r choice
     choice=${choice^^}
   }
@@ -383,7 +383,7 @@ add_equipment() {
       
       # Input Equipment ID
       while true; do
-        echo -n "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
         read -r equipment_id
         if null_check "$equipment_id" "Equipment ID"; then
           if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
@@ -403,7 +403,7 @@ add_equipment() {
       done
 
       while true; do
-        echo -n "${CYAN_HIGHLIGHT}Type${RESET}: "
+        printf "${CYAN_HIGHLIGHT}Type${RESET}: "
         read -r equipment_type
         if null_check "$equipment_type" "Equipment Type"; then
           if [[ ! "$equipment_type" == "keyboard" && ! "$equipment_type" == "mouse" && ! "$equipment_type" == "monitor" && ! "$equipment_type" == "webcam" && ! "$equipment_type" == "mousepad" && ! "$equipment_type" == "laptop" ]]; then
@@ -418,7 +418,7 @@ add_equipment() {
       done
 
       while true; do
-        echo -n "${CYAN_HIGHLIGHT}Model${RESET}: "
+        printf "${CYAN_HIGHLIGHT}Model${RESET}: "
         read -r equipment_model
         if null_check "$equipment_model" "Equipment Model"; then
           break
@@ -554,27 +554,33 @@ add_equipment() {
 search_equipment() {
   search_another="Y"
   confirmation() {
-    read -rp "Search another Equipment? (y)es or (q)uit: " search_another
+    printf "${CYAN_HIGHLIGHT}Search another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
+    read -r search_another
     search_another=${search_another^^}
   }
 
   clear
-  printf '%s\n\n' "Search Equipment"
+  echo ""
+  print_title_bar "Search Equipment"
+  echo ""
+  echo ""
+  
   while [[ "$search_another" == "Y" ]]; do
 
     if [ ! -f Equipment.txt ]; then
-      echo "No equipment registered yet, please register equipment first."
+      print_error "No equipment registered yet, please register equipment first."
       echo "-------------------------------------------------------------------------"
       sleep 1
       break
     fi
 
     echo "Please enter the Serial Number of the equipment you want to search for."
-    read -rp "Enter Serial Number: " EquipSerial
+    printf "${CYAN_HIGHLIGHT}Enter Serial Number${RESET}: "
+    read -r EquipSerial
     echo "-------------------------------------------------------------------------"
     if null_check "$EquipSerial" "Equipment Serial"; then
       if [[ ! "$EquipSerial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
-        echo "Invalid Serial Number format. Please use the format: AB123456789"
+        print_error "Invalid Serial Number format. Please use the format: AB123456789"
         sleep 2
         tput cuu 4
         tput ed
@@ -626,14 +632,19 @@ update_equipment() {
   clear
   update_another="Y"
   confirmation() {
-    read -rp "Update another Equipment? (y)es or (q)uit: " update_another
+    printf "${CYAN_HIGHLIGHT}Update another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
+    read -r update_another
     update_another=${update_another^^}
   }
 
-  printf '%s\n\n' "Update Equipment Details"
+  echo ""
+  print_title_bar "Update Equipment Details"
+  echo ""
+  echo ""
+  
   while [[ $update_another == "Y" ]]; do
     if [ ! -f Equipment.txt ]; then
-      echo "No equipment registered yet, please register equipment first."
+      print_error "No equipment registered yet, please register equipment first."
       echo "-------------------------------------------------------------------------"
       sleep 1
       break
@@ -835,14 +846,19 @@ delete_equipment() {
   clear
   delete_another="Y"
   confirmation() {
-    read -rp "Delete another Equipment? (y)es or (q)uit: " delete_another
+    printf "${CYAN_HIGHLIGHT}Delete another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
+    read -r delete_another
     delete_another=${delete_another^^}
   }
 
-  printf '%s\n\n' "Delete Equipment Details"
+  echo ""
+  print_title_bar "Delete Equipment Details"
+  echo ""
+  echo ""
+  
   while [[ $delete_another == "Y" ]]; do
     if [[ ! -f Equipment.txt ]]; then
-      echo "Equipment file not found, unable to delete."
+      print_error "Equipment file not found, unable to delete."
       echo "-------------------------------------------------------------------------"
       sleep 2
       break
@@ -926,10 +942,13 @@ sort_by_model() {
   }
 
   clear
-  printf '\n%s\n\n' "Equipment Details Sorted By Model"
+  echo ""
+  print_title_bar "Equipment Details Sorted By Model"
+  echo ""
+  echo ""
 
   if [[ ! -f Equipment.txt ]]; then
-    echo "Equipment file not found, please add equipment first."
+    print_error "Equipment file not found, please add equipment first."
     echo "-------------------------------------------------------------------------------"
     return
   fi
@@ -975,10 +994,13 @@ sort_by_status() {
     echo "Exported to $out_file"
     }
   clear
-  printf '\n%s\n\n' "Equipment Details Sorted By Status"
+  echo ""
+  print_title_bar "Equipment Details Sorted By Status"
+  echo ""
+  echo ""
 
   if [[ ! -f Equipment.txt ]]; then
-    echo "Equipment file not found, please add equipment first."
+    print_error "Equipment file not found, please add equipment first."
     echo "-------------------------------------------------------------------------------"
     return
   fi
@@ -1045,10 +1067,13 @@ sort_by_type() {
     echo "Exported to $out_file"
     }
   clear
-  printf '\n%s\n\n' "Equipment Details Sorted By Type"
+  echo ""
+  print_title_bar "Equipment Details Sorted By Type"
+  echo ""
+  echo ""
 
   if [[ ! -f Equipment.txt ]]; then
-    echo "Equipment file not found, please add equipment first."
+    print_error "Equipment file not found, please add equipment first."
     echo "-------------------------------------------------------------------------------"
     return
   fi
