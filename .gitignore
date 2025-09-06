@@ -27,3 +27,7 @@ TestResults.xml
 *test*.sh
 test_*.sh
 *_test.sh
+
+# Assignment text files
+assignment_text.txt
+*assignment*.txt
