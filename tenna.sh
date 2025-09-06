@@ -2,26 +2,16 @@
 
 # tenna.sh made by Lye Wei Lun, Lim Yung Juin, Swetha
 
-# Enable alternate screen buffer
-tput smcup             # Save current terminal content and switch to alternate buffer
-trap 'tput rmcup' EXIT # Restore original terminal content on exit
-
-#--------------------------------------------------------------------------------------
-# Ononoki Yotsugi Inspired Color Palette
-# Orange title bars, white text, cyan highlights for elegance
-
-# ANSI Color Codes
-RESET='\033[0m'          # Reset all formatting
-BOLD='\033[1m'           # Bold text
-
-# Ononoki Yotsugi Color Palette
-ORANGE_BG='\033[48;5;208m'    # Warm orange background (her signature color)
-WHITE_TEXT='\033[97m'         # Pure white text
-CYAN_HIGHLIGHT='\033[96m'     # Cyan highlights for important elements
-SOFT_YELLOW='\033[93m'        # Soft yellow for menu options
-LIGHT_GRAY='\033[37m'         # Light gray for secondary text
-GREEN_SUCCESS='\033[92m'      # Green for success messages
-RED_ERROR='\033[91m'          # Red for error messages
+# Ononoki Yotsugi inspired color palette
+ORANGE_BG="\033[48;5;208m"    # Orange background (title bars)
+WHITE_TEXT="\033[97m"         # White text
+CYAN_HIGHLIGHT="\033[96m"     # Cyan highlights  
+SOFT_YELLOW="\033[93m"        # Soft yellow for options
+LIGHT_GRAY="\033[37m"         # Light gray for regular text
+BOLD="\033[1m"                # Bold text
+RED_ERROR="\033[91m"          # Red for errors
+GREEN_SUCCESS="\033[92m"      # Green for success
+RESET="\033[0m"               # Reset all formatting
 
 # Color Functions
 print_title_bar() {
@@ -50,17 +40,6 @@ print_colored() {
     printf "${color}%s${RESET}" "$text"
 }
 
-print_highlighted() {
-    local text="$1"
-    printf "${CYAN_HIGHLIGHT}${BOLD}%s${RESET}" "$text"
-}
-
-print_menu_option() {
-    local option="$1"
-    local description="$2"
-    printf "  ${CYAN_HIGHLIGHT}${BOLD}%s${RESET} - ${SOFT_YELLOW}%s${RESET}\n" "$option" "$description"
-}
-
 print_success() {
     local text="$1"
     printf "${GREEN_SUCCESS}✓ %s${RESET}\n" "$text"
@@ -85,6 +64,10 @@ center_text() {
     printf "%*s" "$padding" ""
     echo -e "${color}${text}${RESET}"
 }
+
+# Enable alternate screen buffer
+tput smcup             # Save current terminal content and switch to alternate buffer
+trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
@@ -111,21 +94,22 @@ show_menu() {
     echo ""
     echo ""
     
-    # Center the menu with elegant spacing
+    # Center the menu with proper Unicode box alignment
     center_text "╔══════════════════════════════════════════════════╗"
     center_text "║                                                  ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}A${RESET} - ${SOFT_YELLOW}Add Equipment${RESET}                   ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}S${RESET} - ${SOFT_YELLOW}Search Equipment${RESET}                ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}U${RESET} - ${SOFT_YELLOW}Update Equipment${RESET}                ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}D${RESET} - ${SOFT_YELLOW}Delete Equipment${RESET}                ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}M${RESET} - ${SOFT_YELLOW}Sort by Model${RESET}                   ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}T${RESET} - ${SOFT_YELLOW}Sort by Status${RESET}                  ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}P${RESET} - ${SOFT_YELLOW}Sort by Type${RESET}                    ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}A${RESET} - ${SOFT_YELLOW}Add Equipment${RESET}                    ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}S${RESET} - ${SOFT_YELLOW}Search Equipment${RESET}                 ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}U${RESET} - ${SOFT_YELLOW}Update Equipment${RESET}                 ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}D${RESET} - ${SOFT_YELLOW}Delete Equipment${RESET}                 ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}M${RESET} - ${SOFT_YELLOW}Sort by Model${RESET}                    ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}T${RESET} - ${SOFT_YELLOW}Sort by Status${RESET}                   ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}P${RESET} - ${SOFT_YELLOW}Sort by Type${RESET}                     ║"
     center_text "║                                                  ║"
-    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}Q${RESET} - ${SOFT_YELLOW}Quit${RESET}                            ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}Q${RESET} - ${SOFT_YELLOW}Quit${RESET}                             ║"
     center_text "║                                                  ║"
     center_text "╚══════════════════════════════════════════════════╝"
     echo ""
+    printf "${CYAN_HIGHLIGHT}Please select a choice: ${RESET}"
 }
 
 #========================================Task 2========================================
@@ -385,7 +369,8 @@ add_equipment() {
   clear
   choice="Y"
   confirmation() {
-    read -rp "Add another new Equipment details? (y)es or (q)uit : " choice
+    echo -n "${CYAN_HIGHLIGHT}Add another new Equipment details? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
+    read -r choice
     choice=${choice^^}
   }
   while true; do
@@ -394,18 +379,20 @@ add_equipment() {
       echo ""
       print_title_bar "Add Equipment Details Form"
       echo ""
+      echo ""
+      
       # Input Equipment ID
       while true; do
-        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${CYAN_HIGHLIGHT}E0001${RESET}): "
+        echo -n "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
         read -r equipment_id
         if null_check "$equipment_id" "Equipment ID"; then
           if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
-            echo "Invalid Equipment ID format. Please use the format: E0001"
+            print_error "Invalid Equipment ID format. Please use the format: E0001"
             sleep 2
             tput cuu 3
             tput ed
           elif [[ -f Equipment.txt && -n $(grep "^$equipment_id:" Equipment.txt) ]]; then
-            echo "Equipment ID already exists. Please enter a unique ID."
+            print_error "Equipment ID already exists. Please enter a unique ID."
             sleep 2
             tput cuu 2
             tput ed
@@ -416,10 +403,11 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Type: " equipment_type
+        echo -n "${CYAN_HIGHLIGHT}Type${RESET}: "
+        read -r equipment_type
         if null_check "$equipment_type" "Equipment Type"; then
           if [[ ! "$equipment_type" == "keyboard" && ! "$equipment_type" == "mouse" && ! "$equipment_type" == "monitor" && ! "$equipment_type" == "webcam" && ! "$equipment_type" == "mousepad" && ! "$equipment_type" == "laptop" ]]; then
-            echo "Invalid equipment type. Please enter keyboard, mouse, monitor, webcam, mousepad, or laptop."
+            print_error "Invalid equipment type. Please enter keyboard, mouse, monitor, webcam, mousepad, or laptop."
             sleep 2
             tput cuu 2
             tput ed
@@ -430,7 +418,8 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Model: " equipment_model
+        echo -n "${CYAN_HIGHLIGHT}Model${RESET}: "
+        read -r equipment_model
         if null_check "$equipment_model" "Equipment Model"; then
           break
         fi
@@ -570,9 +559,7 @@ search_equipment() {
   }
 
   clear
-  echo ""
-  print_title_bar "Search Equipment"
-  echo ""
+  printf '%s\n\n' "Search Equipment"
   while [[ "$search_another" == "Y" ]]; do
 
     if [ ! -f Equipment.txt ]; then
@@ -643,9 +630,7 @@ update_equipment() {
     update_another=${update_another^^}
   }
 
-  echo ""
-  print_title_bar "Update Equipment Details"
-  echo ""
+  printf '%s\n\n' "Update Equipment Details"
   while [[ $update_another == "Y" ]]; do
     if [ ! -f Equipment.txt ]; then
       echo "No equipment registered yet, please register equipment first."
@@ -823,7 +808,7 @@ update_equipment() {
         # Replace old record with updated record
         sed -i "s/^$EquipID:.*/$updated_record/" Equipment.txt
 
-        print_success "Equipment updated successfully!"
+        echo "Equipment updated successfully!"
       elif [[ $confirm_update == "Q" ]]; then
         echo "Update cancelled."
       else
@@ -1124,8 +1109,8 @@ sort_by_type() {
 main_menu() {
   # Read function
   read_input() {
+    clear
     show_menu
-    printf "${CYAN_HIGHLIGHT}Please select a choice: ${RESET}"
     read -r choice
     choice=${choice//[[:space:]]/}
   }
@@ -1151,15 +1136,12 @@ main_menu() {
     T) sort_by_status ;;
     P) sort_by_type ;;
     Q)
-      clear
-      echo ""
-      center_text "${SOFT_YELLOW}Thank you for using Equipment Management System!" 
-      center_text "${LIGHT_GRAY}Program will exit in 1 second..."
+      echo "Program will exit in 1 second..."
       sleep 1
       break
       ;;
     *) 
-      print_error "Invalid option. Try again."
+      echo "Invalid option. Try again."
       sleep 2
       ;;
     esac
