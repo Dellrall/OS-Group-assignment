@@ -2,6 +2,8 @@
 
 ## 📚 Overview
 
+![tenna](https://github.com/user-attachments/assets/0c954388-d337-446a-9363-0058c4ea6174)
+
 This project is a comprehensive **Equipment Management System** built using Bash shell scripting for Linux environments. The system provides a complete CRUD (Create, Read, Update, Delete) interface for managing equipment inventory with advanced features like data validation, date formatting, and multiple sorting options.
 
 **Main Script:** `tenna.sh` - A menu-driven equipment management system
