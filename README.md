@@ -1,123 +1,293 @@
-# 🚀 Operating System Assignment - Bash Shell Scripting
+# 🔧 Equipment Management System - OS Group Assignment
 
 ## 📚 Overview
 
-Welcome to your OS Bash scripting assignment! This project has you and your group (3 members) tackling hands-on shell scripting tasks on Linux. Below you'll find **deliverables**, **requirements**, **deadlines**, a **suggested timeline**, and a beginner-friendly guide to Bash and Linux. Plus, places to assign responsibilities and add team member names! 🎉
+This project is a comprehensive **Equipment Management System** built using Bash shell scripting for Linux environments. The system provides a complete CRUD (Create, Read, Update, Delete) interface for managing equipment inventory with advanced features like data validation, date formatting, and multiple sorting options.
+
+**Main Script:** `tenna.sh` - A menu-driven equipment management system
 
 ---
 
-## ✅ Deliverables
+## ✨ Features
 
-- **Bash shell scripts** for each assigned task 📝
-- **Documentation** (this README) explaining your approach, how to run the scripts, and group member roles 📖
-- **Screenshots/output logs** of your scripts running (if required) 🖼️
-- **Reflection/discussion** about your experience & teamwork (if required) 💬
+### 🔍 Core Functionality
+- **Add Equipment** - Add new equipment with validation
+- **Search Equipment** - Find equipment by various criteria  
+- **Update Equipment** - Modify existing equipment records
+- **Delete Equipment** - Remove equipment with confirmation
+- **Sort & Export** - Sort by Model, Status, or Type with export options
 
----
+### 🛡️ Data Validation
+- **Equipment ID Format:** E0001-E9999 pattern validation
+- **Serial Number Format:** AB123456789 pattern validation  
+- **Date Validation:** MM-DD-YYYY input format with conversion to YYYY-MM-DD storage
+- **Status Options:** Available, In Use, Under Maintenance, Retired
+- **Type Categories:** Various equipment types (mouse, keyboard, monitor, etc.)
 
-## 📋 Requirements
+### 📅 Date Management
+- **Input Format:** MM-DD-YYYY (user-friendly)
+- **Display Format:** YYYY-MM-DD (standardized)
+- **Automatic Conversion:** Between input and display formats
+- **Date Validation:** Ensures valid dates and logical warranty periods
 
-### General Requirements
-
-- All scripts in **Bash** and executable on Linux 🐧
-- Use only the allowed commands/tools (see PDF for details) 📄
-- Include comments in scripts for clarity 💡
-
-### Task Breakdown & Responsibility Chart
-
-| Task | Description | Deadline | Script Name | Assigned To 👤 |
-|------|-------------|----------|-------------|----------------|
-| Task 1 | _(Edit with specifics from your PDF)_ | Day 2 | `list_files.sh` | [Name here] |
-| Task 2 | _(Edit with specifics from your PDF)_ | Day 4 | `system_info.sh` | [Name here] |
-| Task 3 | _(Edit with specifics from your PDF)_ | Day 5 | `user_manager.sh` | [Name here] |
-| Task 4 | _(Edit with specifics from your PDF)_ | Day 6 | `backup.sh` | [Name here / Shared] |
-| Documentation | Write README & instructions | Day 7 | `README.md` | [Name(s) here] |
-
-> ✏️ **Replace task details and names with your actual assignment and team info!**
+### 💾 Data Storage
+- **File Format:** Colon-separated values in `Equipment.txt`
+- **Structure:** `ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate`
+- **Sample Data:** Pre-populated with 8 equipment records
 
 ---
 
-## ⏰ Deadlines
+## 🚀 Quick Start
 
-- **Assignment Due:** One week from today (e.g., 2025-08-19)
-- Each member: Complete their assigned task by their deadline above
-- Final review & integration: Day 7
+### Prerequisites
+- Linux environment with Bash shell
+- Write permissions in the project directory
 
----
+### Installation & Usage
 
-## 🗓️ Suggested Timeline
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Dellrall/OS-Group-assignment.git
+   cd OS-Group-assignment
+   ```
 
-| Day | Activity |
-|-----|----------|
-| Day 1 (Today) | 📢 Meet, read assignment, clarify tasks, divide work |
-| Day 2 | 🛠️ Task 1 script done, review with team |
-| Day 3 | 🔍 Finalize Task 1, start Task 2 |
-| Day 4 | 🛠️ Task 2 script done, review with team |
-| Day 5 | 🛠️ Task 3 script done |
-| Day 6 | 🤝 Collaborate on Task 4, start README |
-| Day 7 | 🧪 Final testing, polish README, gather screenshots, submit! |
+2. **Make the script executable:**
+   ```bash
+   chmod +x tenna.sh
+   ```
 
----
+3. **Run the equipment management system:**
+   ```bash
+   ./tenna.sh
+   ```
 
-## 👥 Team Members & Assigned Responsibilities
+### Menu Options
 
-| Name | Task(s) Assigned | Contact |
-|------|------------------|---------|
-| [Member 1] | [Task 1, ...] | [Email/Handle] |
-| [Member 2] | [Task 2, ...] | [Email/Handle] |
-| [Member 3] | [Task 3, ...] | [Email/Handle] |
-
-> ✏️ **Fill in your names, tasks, and contact info!**
-
----
-
-## 🐧 Bash & Linux Concepts for Beginners
-
-### What is Bash? 🤔
-
-- **Bash** = "Bourne Again SHell" – the main command-line interpreter for Linux.
-- Bash scripts are text files with commands that run in sequence.
-
-### How Does Bash Run? 🏃
-
-1. Write commands in a `.sh` file (e.g., `myscript.sh`)
-2. Make it executable:  
-   `chmod +x myscript.sh`
-3. Run it:  
-   `./myscript.sh`
-4. Bash executes each command line-by-line.
-
-### Useful Bash Tips 📝
-
-- **Comments:** Use `#` for notes.
-- **Variables:** Store info (`name="John"`)
-- **Loops:** Repeat actions (`for`, `while`)
-- **Conditionals:** Make decisions (`if`, `else`)
-- **Popular commands:** `ls`, `pwd`, `echo`, `cat`
-- **Permissions:** Use `chmod` to allow scripts to run
-
-#### Example Script
-
-```bash
-#!/bin/bash
-# Greet the user
-echo "👋 Hello, $USER! Today is $(date)."
+```
+========================
+  Equipment Management
+========================
+A. Add Equipment
+S. Search Equipment  
+U. Update Equipment
+D. Delete Equipment
+M. Sort by Model
+T. Sort by Status
+P. Sort by Type
+Q. Quit
+========================
 ```
 
 ---
 
-## 🤝 Collaboration Tips
+## 📋 Detailed Functionality
 
-- Communicate often, share progress & blockers
-- Comment scripts for clarity
-- Review each other's work before submission
-- Ask for help if stuck — Linux/Bash has tons of online help!
+### Adding Equipment (A)
+- **Equipment ID:** Must follow E0001-E9999 format
+- **Type Selection:** Choose from predefined categories
+- **Model Input:** Free text for equipment model
+- **Serial Number:** Must follow AB123456789 format
+- **Status Selection:** Available, In Use, Under Maintenance, Retired
+- **Purchase Date:** MM-DD-YYYY format with validation
+- **Warranty Date:** MM-DD-YYYY format with validation
+
+### Searching Equipment (S)
+Search by any of the following criteria:
+- Equipment ID
+- Equipment Type
+- Model Name
+- Serial Number
+- Status
+- Purchase Date
+- Warranty Date
+
+Results display in formatted table with YYYY-MM-DD dates.
+
+### Updating Equipment (U)
+- Search for equipment by Serial Number
+- Modify any field except Equipment ID
+- Maintains data validation for all updates
+- Confirmation dialog before saving changes
+
+### Deleting Equipment (D)
+- Search for equipment by Serial Number
+- Display current record for verification
+- Confirmation dialog before permanent deletion
+- Safe removal from data file
+
+### Sorting & Export (M/T/P)
+- **Sort by Model (M):** Alphabetical order by equipment model
+- **Sort by Status (T):** Groups by equipment status
+- **Sort by Type (P):** Organizes by equipment type
+- All sorts export to dedicated files with proper formatting
 
 ---
 
-## 📝 Final Notes
+## 🗂️ File Structure
 
-- **Double-check** your PDF for specifics and adjust this plan!
-- **Submit all required files** (scripts, README, outputs, etc.)
-- Good luck, team! 🚦✨
+```
+├── tenna.sh                 # Main equipment management script
+├── Equipment.txt            # Equipment data storage file
+├── README.md               # This documentation
+├── .gitignore              # Git ignore rules
+└── test files/             # Test scripts (locally only)
+```
+
+---
+
+## 🔧 Technical Implementation
+
+### Data Validation Functions
+- `validate_equipment_id()` - Validates Equipment ID format
+- `validate_serial_number()` - Validates Serial Number format  
+- `validate_date()` - Validates date format and logic
+- `convert_date_format()` - Converts between date formats
+
+### Core Functions
+- `add_equipment()` - Handles equipment addition
+- `search_equipment()` - Implements search functionality
+- `update_equipment()` - Manages equipment updates
+- `delete_equipment()` - Processes equipment deletion
+- `sort_by_model()` - Sorts and exports by model
+- `sort_by_status()` - Sorts and exports by status  
+- `sort_by_type()` - Sorts and exports by type
+
+### User Interface
+- Clear screen management with `clear` commands
+- Formatted output using `printf` for table alignment
+- Color-coded messages for better user experience
+- Confirmation dialogs for destructive operations
+
+---
+
+## 📊 Sample Data
+
+The system comes with pre-populated sample data including:
+- 8 equipment records across different types
+- Various status states (Available, In Use, Under Maintenance)
+- Different models and manufacturers
+- Realistic purchase and warranty dates
+
+---
+
+## 🧪 Testing
+
+### Validation Testing
+- Equipment ID format enforcement
+- Serial Number pattern validation
+- Date format and logic verification
+- Status and type option validation
+
+### Functionality Testing  
+- CRUD operations verification
+- Search functionality across all fields
+- Sort operations and export validation
+- Data persistence and file handling
+
+### Edge Cases
+- Invalid input handling
+- Empty file scenarios
+- Duplicate prevention
+- Date boundary conditions
+
+---
+
+## 🔒 Data Integrity
+
+### Backup & Recovery
+- Data stored in human-readable format
+- Easy backup with standard file operations
+- No database dependencies
+- Portable across Linux systems
+
+### Validation Layers
+- Input validation at entry point
+- Format validation before storage
+- Data consistency checks
+- Error handling for file operations
+
+---
+
+## 🛠️ Development Notes
+
+### Assignment Alignment
+- Script fully aligned with PDF assignment requirements
+- Proper date formatting (MM-DD-YYYY input, YYYY-MM-DD display)
+- Menu text corrections and typo fixes
+- Exit function properly mapped to 'Q' option
+- Confirmation dialogs matching specifications
+
+### Improvements Made
+- Enhanced date formatting system
+- Improved table alignment and readability
+- Better error handling and user feedback
+- Consistent validation across all operations
+- Git ignore patterns for test files
+
+---
+
+## 📝 Assignment Completion
+
+### Tasks Implemented
+- ✅ **Task 1:** Basic file operations and menu system
+- ✅ **Task 2:** Data validation and input handling  
+- ✅ **Task 3:** Search and retrieval functionality
+- ✅ **Task 4:** Update and modification operations
+- ✅ **Task 5:** Delete operations with safety checks
+- ✅ **Task 6:** Sorting and export functionality
+
+### PDF Requirements Met
+- ✅ Equipment ID format (E0001-E9999)
+- ✅ Date handling (MM-DD-YYYY input, YYYY-MM-DD display)
+- ✅ Menu structure and navigation
+- ✅ Confirmation dialogs
+- ✅ Data validation requirements
+- ✅ File-based storage system
+
+---
+
+## 🚦 Future Enhancements
+
+### Potential Improvements
+- **Database Integration:** PostgreSQL or MySQL backend
+- **Web Interface:** HTML/CSS frontend with CGI
+- **Advanced Search:** Regular expression support
+- **Reporting:** Statistical analysis and charts
+- **Multi-user Support:** User authentication and permissions
+- **Backup Automation:** Scheduled data backups
+
+### Performance Optimizations
+- **Indexed Search:** Faster lookups for large datasets
+- **Caching:** Frequently accessed data caching
+- **Pagination:** Large dataset handling
+- **Concurrent Access:** File locking mechanisms
+
+---
+
+## 📞 Support & Contact
+
+For questions, issues, or contributions:
+- **Repository:** [OS-Group-assignment](https://github.com/Dellrall/OS-Group-assignment)
+- **Branch:** main
+- **Issues:** Use GitHub Issues for bug reports
+- **Pull Requests:** Welcome for improvements
+
+---
+
+## 📄 License
+
+This project is part of an academic assignment. See LICENSE file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Course:** Operating Systems
+- **Assignment:** Bash Shell Scripting Project
+- **Tools Used:** Bash, Git, VS Code, Linux utilities
+- **Testing:** Comprehensive validation and edge case testing
+
+---
+
+*Last Updated: September 6, 2025*
 
