@@ -69,11 +69,15 @@ center_text() {
     local text="$1"
     local color="${2:-$LIGHT_GRAY}"
     local term_width=$(tput cols 2>/dev/null || echo "80")
-    local text_length=${#text}
+    
+    # Calculate text length without ANSI escape sequences for proper centering
+    local clean_text=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    local text_length=${#clean_text}
     local padding=$(( (term_width - text_length) / 2 ))
     
     [[ $padding -lt 0 ]] && padding=0
-    printf "%*s${color}%s${RESET}\n" "$padding" "" "$text"
+    printf "%*s" "$padding" ""
+    echo -e "${color}${text}${RESET}"
 }
 
 # =======================================Task 1========================================
