@@ -1,0 +1,2 @@
+ID001:Desktop:Dell_Optiplex:SN001:Active:2023-01-15:2026-01-15
+ID002:Laptop:HP_EliteBook:SN002:Maintenance:2023-02-20:2026-02-20

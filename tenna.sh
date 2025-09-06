@@ -5,6 +5,7 @@
 # Ononoki Yotsugi inspired color palette
 ORANGE_BG="\033[48;5;208m"    # Orange background (title bars)
 WHITE_TEXT="\033[97m"         # White text
+BLACK_TEXT="\033[30m"         # Black text
 CYAN_HIGHLIGHT="\033[96m"     # Cyan highlights  
 SOFT_YELLOW="\033[93m"        # Soft yellow for options
 LIGHT_GRAY="\033[37m"         # Light gray for regular text
@@ -12,6 +13,25 @@ BOLD="\033[1m"                # Bold text
 RED_ERROR="\033[91m"          # Red for errors
 GREEN_SUCCESS="\033[92m"      # Green for success
 RESET="\033[0m"               # Reset all formatting
+
+# Monogatari Character Color Palettes
+# Senjougahara Hitagi - Purple/Violet theme (elegant, sophisticated)
+SENJOU_HEADER="\033[48;5;98m"     # Deep purple background
+SENJOU_CATEGORY="\033[95m"        # Bright magenta for categories
+SENJOU_HIGHLIGHT="\033[35m"       # Purple for highlighted data
+SENJOU_DATA="\033[38;5;183m"      # Soft lavender for regular data
+
+# Hachikuji Mayoi - Yellow/Golden theme (bright, energetic)
+MAYOI_HEADER="\033[48;5;214m"     # Golden orange background
+MAYOI_CATEGORY="\033[93m"         # Bright yellow for categories
+MAYOI_HIGHLIGHT="\033[33m"        # Golden yellow for highlighted data
+MAYOI_DATA="\033[38;5;228m"       # Pale yellow for regular data
+
+# Shinobu Oshino - Red/Pink theme (dramatic, powerful)
+SHINOBU_HEADER="\033[48;5;161m"   # Deep pink background
+SHINOBU_CATEGORY="\033[91m"       # Bright red for categories
+SHINOBU_HIGHLIGHT="\033[31m"      # Dark red for highlighted data
+SHINOBU_DATA="\033[38;5;217m"     # Soft pink for regular data
 
 # Color Functions
 print_title_bar() {
@@ -29,6 +49,52 @@ print_title_bar() {
     done
     
     # Move cursor back to beginning and print centered title
+    printf "\r"
+    printf "%*s%s%*s" "$padding" "" "$title" "$((term_width - padding - title_length))" ""
+    printf "${RESET}\n"
+}
+
+# Character-specific title bar functions
+print_senjou_title_bar() {
+    local title="$1"
+    local term_width=$(tput cols 2>/dev/null || echo "80")
+    local title_length=${#title}
+    local padding=$(( (term_width - title_length) / 2 ))
+    
+    printf "${SENJOU_HEADER}${WHITE_TEXT}${BOLD}"
+    for ((i=0; i<term_width; i++)); do
+        printf " "
+    done
+    printf "\r"
+    printf "%*s%s%*s" "$padding" "" "$title" "$((term_width - padding - title_length))" ""
+    printf "${RESET}\n"
+}
+
+print_mayoi_title_bar() {
+    local title="$1"
+    local term_width=$(tput cols 2>/dev/null || echo "80")
+    local title_length=${#title}
+    local padding=$(( (term_width - title_length) / 2 ))
+    
+    printf "${MAYOI_HEADER}${BLACK_TEXT}${BOLD}"
+    for ((i=0; i<term_width; i++)); do
+        printf " "
+    done
+    printf "\r"
+    printf "%*s%s%*s" "$padding" "" "$title" "$((term_width - padding - title_length))" ""
+    printf "${RESET}\n"
+}
+
+print_shinobu_title_bar() {
+    local title="$1"
+    local term_width=$(tput cols 2>/dev/null || echo "80")
+    local title_length=${#title}
+    local padding=$(( (term_width - title_length) / 2 ))
+    
+    printf "${SHINOBU_HEADER}${WHITE_TEXT}${BOLD}"
+    for ((i=0; i<term_width; i++)); do
+        printf " "
+    done
     printf "\r"
     printf "%*s%s%*s" "$padding" "" "$title" "$((term_width - padding - title_length))" ""
     printf "${RESET}\n"
@@ -217,6 +283,23 @@ convert_date_format() {
 }
 
 #--------------------------------------------------------------------------------------
+# Function to center a table line
+center_table_line() {
+  local line="$1"
+  local term_width=$(tput cols 2>/dev/null || echo 120)
+  local line_length=${#line}
+  
+  # Calculate padding needed on each side
+  local padding=$(( (term_width - line_length) / 2 ))
+  
+  # Ensure padding is not negative
+  [[ $padding -lt 0 ]] && padding=0
+  
+  # Print the centered line
+  printf "%*s%s\n" "$padding" "" "$line"
+}
+
+#--------------------------------------------------------------------------------------
 # Responsive Table Formatting Function
 format_equipment_table() {
   local -a data_rows=("$@")
@@ -312,9 +395,10 @@ format_equipment_table() {
   done
   format_str+="\n"
   
-  # Print table header
-  printf "$format_str" "${headers[@]}"
-  echo "$separator_line"
+  # Print table header (centered)
+  header_line=$(printf "$format_str" "${headers[@]}")
+  center_table_line "${header_line%$'\n'}"
+  center_table_line "$separator_line"
   
   # Print data rows
   for row in "${data_rows[@]}"; do
@@ -343,7 +427,234 @@ format_equipment_table() {
       row_data+=("$display_warranty")
     fi
     
-    printf "$format_str" "${row_data[@]}"
+    # Print data row (centered)
+    data_line=$(printf "$format_str" "${row_data[@]}")
+    center_table_line "${data_line%$'\n'}"
+  done
+}
+
+# Character-themed table formatting function
+format_character_table() {
+  local character_theme="$1"
+  shift
+  local -a data_rows=("$@")
+  local include_purchase_date=${INCLUDE_PURCHASE_DATE:-false}
+  
+  # Set color scheme based on character
+  local header_color category_color highlight_color data_color
+  case "$character_theme" in
+    "senjou")
+      header_color="$SENJOU_HEADER"
+      category_color="$SENJOU_CATEGORY"
+      highlight_color="$SENJOU_HIGHLIGHT"
+      data_color="$SENJOU_DATA"
+      ;;
+    "mayoi")
+      header_color="$MAYOI_HEADER"
+      category_color="$MAYOI_CATEGORY"
+      highlight_color="$MAYOI_HIGHLIGHT"
+      data_color="$MAYOI_DATA"
+      ;;
+    "shinobu")
+      header_color="$SHINOBU_HEADER"
+      category_color="$SHINOBU_CATEGORY"
+      highlight_color="$SHINOBU_HIGHLIGHT"
+      data_color="$SHINOBU_DATA"
+      ;;
+    *)
+      # Default to regular colors if unknown theme
+      header_color="$ORANGE_BG"
+      category_color="$CYAN_HIGHLIGHT"
+      highlight_color="$SOFT_YELLOW"
+      data_color="$LIGHT_GRAY"
+      ;;
+  esac
+  
+  # Get terminal width, default to 120 if not available
+  local term_width
+  term_width=$(tput cols 2>/dev/null || echo "120")
+  
+  # Define column headers
+  local headers=("Model" "Equipment ID" "Type" "Serial Number" "Status")
+  if [[ "$include_purchase_date" == "true" ]]; then
+    headers+=("Purchase Date" "Warranty Date")
+  else
+    headers+=("Warranty Date")
+  fi
+  
+  # Calculate maximum width for each column based on data
+  local -a max_widths=()
+  local col_count=${#headers[@]}
+  
+  # Initialize with header lengths
+  for i in "${!headers[@]}"; do
+    max_widths[i]=${#headers[i]}
+  done
+  
+  # Check data for maximum widths
+  for row in "${data_rows[@]}"; do
+    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
+    
+    # Convert dates for display
+    local display_purchase display_warranty
+    display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+    
+    # Create data array in display order
+    local -a row_data=("$model" "$id" "$type" "$serial" "$status")
+    if [[ "$include_purchase_date" == "true" ]]; then
+      row_data+=("$display_purchase" "$display_warranty")
+    else
+      row_data+=("$display_warranty")
+    fi
+    
+    # Update maximum widths
+    for i in "${!row_data[@]}"; do
+      if [[ ${#row_data[i]} -gt ${max_widths[i]} ]]; then
+        max_widths[i]=${#row_data[i]}
+      fi
+    done
+  done
+  
+  # Calculate total width needed (including separators)
+  local total_width=0
+  for width in "${max_widths[@]}"; do
+    total_width=$((total_width + width + 3)) # +3 for " | "
+  done
+  total_width=$((total_width - 3)) # Remove last separator
+  
+  # Adjust column widths if total exceeds terminal width
+  if [[ $total_width -gt $term_width ]]; then
+    local available_width=$((term_width - (col_count - 1) * 3)) # Account for separators
+    
+    for i in "${!max_widths[@]}"; do
+      local scaled_width=$((max_widths[i] * available_width / total_width))
+      
+      # Set minimum widths based on column type
+      case $i in
+        0) max_widths[i]=$((scaled_width < 12 ? 12 : scaled_width)) ;; # Model
+        1) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Equipment ID
+        2) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Type
+        3) max_widths[i]=$((scaled_width < 10 ? 10 : scaled_width)) ;;  # Serial Number
+        4) max_widths[i]=$((scaled_width < 8 ? 8 : scaled_width)) ;;   # Status
+        *) max_widths[i]=$((scaled_width < 10 ? 10 : scaled_width)) ;; # Dates
+      esac
+    done
+  fi
+  
+  # Generate colored separator
+  local separator_line=""
+  for i in "${!max_widths[@]}"; do
+    local width=${max_widths[i]}
+    [[ $width -lt 1 ]] && width=1
+    separator_line+="$(printf '%*s' "$width" '' | tr ' ' '-')"
+    if [[ $i -lt $((col_count - 1)) ]]; then
+      separator_line+=" | "
+    fi
+  done
+  
+  # Print colored table header (centered)
+  header_line=""
+  for i in "${!headers[@]}"; do
+    header_line+="$(printf "%-${max_widths[i]}s" "${headers[i]}")"
+    if [[ $i -lt $((col_count - 1)) ]]; then
+      header_line+=" | "
+    fi
+  done
+  
+  # Center and print colored header
+  term_width=$(tput cols 2>/dev/null || echo 120)
+  header_length=${#header_line}
+  header_padding=$(( (term_width - header_length) / 2 ))
+  [[ $header_padding -lt 0 ]] && header_padding=0
+  
+  printf "%*s${category_color}${BOLD}%s${RESET}\n" "$header_padding" "" "$header_line"
+  
+  # Center and print colored separator
+  separator_length=${#separator_line}
+  separator_padding=$(( (term_width - separator_length) / 2 ))
+  [[ $separator_padding -lt 0 ]] && separator_padding=0
+  
+  printf "%*s${highlight_color}%s${RESET}\n" "$separator_padding" "" "$separator_line"
+  
+  # Print data rows with character colors
+  for row in "${data_rows[@]}"; do
+    IFS=':' read -r id type model serial status purchase warranty <<< "$row"
+    
+    # Convert dates for display
+    local display_purchase display_warranty
+    display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+    
+    # Truncate fields if they exceed column width
+    model=${model:0:${max_widths[0]}}
+    id=${id:0:${max_widths[1]}}
+    type=${type:0:${max_widths[2]}}
+    serial=${serial:0:${max_widths[3]}}
+    status=${status:0:${max_widths[4]}}
+    
+    # Create data array in display order
+    local -a row_data=("$model" "$id" "$type" "$serial" "$status")
+    if [[ "$include_purchase_date" == "true" ]]; then
+      display_purchase=${display_purchase:0:${max_widths[5]}}
+      display_warranty=${display_warranty:0:${max_widths[6]}}
+      row_data+=("$display_purchase" "$display_warranty")
+    else
+      display_warranty=${display_warranty:0:${max_widths[5]}}
+      row_data+=("$display_warranty")
+    fi
+    
+    # Build complete row data for centering
+    row_line=""
+    for i in "${!row_data[@]}"; do
+      row_line+="$(printf "%-${max_widths[i]}s" "${row_data[i]}")"
+      if [[ $i -lt $((col_count - 1)) ]]; then
+        row_line+=" | "
+      fi
+    done
+    
+    # Center and print the row with colors
+    term_width=$(tput cols 2>/dev/null || echo 120)
+    row_length=${#row_line}
+    row_padding=$(( (term_width - row_length) / 2 ))
+    [[ $row_padding -lt 0 ]] && row_padding=0
+    
+    # Print with character-specific colors and highlighting
+    printf "%*s${data_color}" "$row_padding" ""
+    for i in "${!row_data[@]}"; do
+      # Highlight the sort criteria column
+      case "$character_theme" in
+        "senjou")  # Sort by Model - highlight model column
+          if [[ $i -eq 0 ]]; then
+            printf "${highlight_color}${BOLD}%-${max_widths[i]}s${RESET}${data_color}" "${row_data[i]}"
+          else
+            printf "%-${max_widths[i]}s" "${row_data[i]}"
+          fi
+          ;;
+        "mayoi")   # Sort by Status - highlight status column
+          if [[ $i -eq 4 ]]; then
+            printf "${highlight_color}${BOLD}%-${max_widths[i]}s${RESET}${data_color}" "${row_data[i]}"
+          else
+            printf "%-${max_widths[i]}s" "${row_data[i]}"
+          fi
+          ;;
+        "shinobu") # Sort by Type - highlight type column
+          if [[ $i -eq 2 ]]; then
+            printf "${highlight_color}${BOLD}%-${max_widths[i]}s${RESET}${data_color}" "${row_data[i]}"
+          else
+            printf "%-${max_widths[i]}s" "${row_data[i]}"
+          fi
+          ;;
+        *)
+          printf "%-${max_widths[i]}s" "${row_data[i]}"
+          ;;
+      esac
+      
+      if [[ $i -lt $((col_count - 1)) ]]; then
+        printf " | "
+      fi
+    done
+    printf "${RESET}\n"
   done
 }
 #--------------------------------------------------------------------------------------
@@ -943,7 +1254,7 @@ sort_by_model() {
 
   clear
   echo ""
-  print_title_bar "Equipment Details Sorted By Model"
+  print_senjou_title_bar "Equipment Details Sorted By Model"
   echo ""
   echo ""
 
@@ -964,20 +1275,22 @@ sort_by_model() {
     return
   fi
 
-  # Use the responsive formatting function
-  INCLUDE_PURCHASE_DATE=false format_equipment_table "${rows[@]}"
+  # Use Senjougahara's character theme for the table
+  INCLUDE_PURCHASE_DATE=false format_character_table "senjou" "${rows[@]}"
 
   echo
-  read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+  printf "${SENJOU_CATEGORY}Would you like to export the report as ASCII text file? ${SENJOU_HIGHLIGHT}(y)es${RESET} or ${SENJOU_HIGHLIGHT}(q)uit${RESET}: "
+  read -r choice
   choice=${choice^^}
   if [[ "$choice" == "Y" ]]; then
     export_file
-    read -rp "Press Enter to continue..."
+    printf "${SENJOU_DATA}Press Enter to continue...${RESET}"
+    read -r
   elif [[ "$choice" == "Q" ]]; then
-    echo "Returning to Equipment Maintenance Menu...."
+    print_success "Returning to Equipment Maintenance Menu...."
     sleep 2
   else
-    echo "Invalid choice, please enter either y or q"
+    print_error "Invalid choice, please enter either y or q"
     sleep 2
   fi
 }
@@ -995,7 +1308,7 @@ sort_by_status() {
     }
   clear
   echo ""
-  print_title_bar "Equipment Details Sorted By Status"
+  print_mayoi_title_bar "Equipment Details Sorted By Status"
   echo ""
   echo ""
 
@@ -1006,7 +1319,8 @@ sort_by_status() {
   fi
  
   while true; do
-   read -rp "Enter Equipment Status (Available/Unavailable): " EqStatus
+   printf "${MAYOI_CATEGORY}Enter Equipment Status ${MAYOI_HIGHLIGHT}(Available/Unavailable)${RESET}: "
+   read -r EqStatus
    EqStatus=${EqStatus^} # Convert to title case
    echo "-------------------------------------------------------------------------------"
    if null_check "$EqStatus" "Equipment Status"; then
@@ -1025,31 +1339,33 @@ sort_by_status() {
     )
     
     if ((${#rows[@]} == 0)); then
-      echo "No equipment found for status: $EqStatus"
+      print_error "No equipment found for status: $EqStatus"
       sleep 2
       tput cuu 3
       tput ed
       continue
     fi
     
-    printf '\n%s: %s\n\n' "Equipment Details Sorted By Status" "$EqStatus"
+    printf "\n${MAYOI_CATEGORY}%s: ${MAYOI_HIGHLIGHT}%s${RESET}\n\n" "Equipment Details Sorted By Status" "$EqStatus"
     
-    # Use the responsive formatting function with purchase date included
-    INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
+    # Use Hachikuji Mayoi's character theme for the table
+    INCLUDE_PURCHASE_DATE=true format_character_table "mayoi" "${rows[@]}"
     
     echo
-    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+    printf "${MAYOI_CATEGORY}Would you like to export the report as ASCII text file? ${MAYOI_HIGHLIGHT}(y)es${RESET} or ${MAYOI_HIGHLIGHT}(q)uit${RESET}: "
+    read -r choice
     choice=${choice^^}
     if [[ "$choice" == "Y" ]]; then
       export_file
-      read -rp "Press Enter to continue..."
+      printf "${MAYOI_DATA}Press Enter to continue...${RESET}"
+      read -r
       break
     elif [[ "$choice" == "Q" ]]; then
-      echo "Returning to Equipment Maintenance Menu...."
+      print_success "Returning to Equipment Maintenance Menu...."
       sleep 2
       break
     else
-      echo "Invalid choice, please enter either y or q"
+      print_error "Invalid choice, please enter either y or q"
       sleep 2
     fi
    fi
@@ -1068,7 +1384,7 @@ sort_by_type() {
     }
   clear
   echo ""
-  print_title_bar "Equipment Details Sorted By Type"
+  print_shinobu_title_bar "Equipment Details Sorted By Type"
   echo ""
   echo ""
 
@@ -1079,7 +1395,8 @@ sort_by_type() {
   fi
  
   while true; do
-   read -rp "Enter equipment Type (keyboard/mouse/monitor/webcam/mousepad/laptop): " EquipType
+   printf "${SHINOBU_CATEGORY}Enter equipment Type ${SHINOBU_HIGHLIGHT}(keyboard/mouse/monitor/webcam/mousepad/laptop)${RESET}: "
+   read -r EquipType
    EquipType=${EquipType,,} # Convert to lowercase
    echo "-------------------------------------------------------------------------------"
    if null_check "$EquipType" "Equipment Type"; then
@@ -1098,24 +1415,26 @@ sort_by_type() {
     )
     
     if ((${#rows[@]} == 0)); then
-      echo "No equipment found for type: $EquipType"
+      print_error "No equipment found for type: $EquipType"
       sleep 2
       tput cuu 3
       tput ed
       continue
     fi
     
-    printf '\n%s: %s\n\n' "Equipment Details Sorted By Type" "$EquipType"
+    printf "\n${SHINOBU_CATEGORY}%s: ${SHINOBU_HIGHLIGHT}%s${RESET}\n\n" "Equipment Details Sorted By Type" "$EquipType"
     
-    # Use the responsive formatting function with purchase date included
-    INCLUDE_PURCHASE_DATE=true format_equipment_table "${rows[@]}"
+    # Use Shinobu Oshino's character theme for the table
+    INCLUDE_PURCHASE_DATE=true format_character_table "shinobu" "${rows[@]}"
     
     echo
-    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+    printf "${SHINOBU_CATEGORY}Would you like to export the report as ASCII text file? ${SHINOBU_HIGHLIGHT}(y)es${RESET} or ${SHINOBU_HIGHLIGHT}(q)uit${RESET}: "
+    read -r choice
     choice=${choice^^}
     if [[ "$choice" == "Y" ]]; then
       export_file
-      read -rp "Press Enter to continue..."
+      printf "${SHINOBU_DATA}Press Enter to continue...${RESET}"
+      read -r
       break
     elif [[ "$choice" == "Q" ]]; then
       echo "Returning to Equipment Maintenance Menu...."
