@@ -6,6 +6,76 @@
 tput smcup             # Save current terminal content and switch to alternate buffer
 trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
+#--------------------------------------------------------------------------------------
+# Ononoki Yotsugi Inspired Color Palette
+# Orange title bars, white text, cyan highlights for elegance
+
+# ANSI Color Codes
+RESET='\033[0m'          # Reset all formatting
+BOLD='\033[1m'           # Bold text
+
+# Ononoki Yotsugi Color Palette
+ORANGE_BG='\033[48;5;208m'    # Warm orange background (her signature color)
+WHITE_TEXT='\033[97m'         # Pure white text
+CYAN_HIGHLIGHT='\033[96m'     # Cyan highlights for important elements
+SOFT_YELLOW='\033[93m'        # Soft yellow for menu options
+LIGHT_GRAY='\033[37m'         # Light gray for secondary text
+GREEN_SUCCESS='\033[92m'      # Green for success messages
+RED_ERROR='\033[91m'          # Red for error messages
+
+# Color Functions
+print_title_bar() {
+    local title="$1"
+    local term_width=$(tput cols 2>/dev/null || echo "80")
+    local title_length=${#title}
+    local padding=$(( (term_width - title_length - 4) / 2 ))  # -4 for spaces around title
+    
+    # Create full-width orange background with white text
+    printf "${ORANGE_BG}${WHITE_TEXT}${BOLD}"
+    printf "%*s" "$term_width" ""  # Full width orange background
+    printf "\r"  # Return to start of line
+    printf "%*s  %s  %*s" "$padding" "" "$title" "$padding" ""
+    printf "${RESET}\n"
+}
+
+print_colored() {
+    local color="$1"
+    local text="$2"
+    printf "${color}%s${RESET}" "$text"
+}
+
+print_highlighted() {
+    local text="$1"
+    printf "${CYAN_HIGHLIGHT}${BOLD}%s${RESET}" "$text"
+}
+
+print_menu_option() {
+    local option="$1"
+    local description="$2"
+    printf "  ${CYAN_HIGHLIGHT}${BOLD}%s${RESET} - ${SOFT_YELLOW}%s${RESET}\n" "$option" "$description"
+}
+
+print_success() {
+    local text="$1"
+    printf "${GREEN_SUCCESS}✓ %s${RESET}\n" "$text"
+}
+
+print_error() {
+    local text="$1"
+    printf "${RED_ERROR}✗ %s${RESET}\n" "$text"
+}
+
+center_text() {
+    local text="$1"
+    local color="${2:-$LIGHT_GRAY}"
+    local term_width=$(tput cols 2>/dev/null || echo "80")
+    local text_length=${#text}
+    local padding=$(( (term_width - text_length) / 2 ))
+    
+    [[ $padding -lt 0 ]] && padding=0
+    printf "%*s${color}%s${RESET}\n" "$padding" "" "$text"
+}
+
 # =======================================Task 1========================================
 # Task 1: Implement Main menu and page selection
 
@@ -23,9 +93,29 @@ select="Please select a choice: "
 
 # Print the menu
 show_menu() {
-  printf '%s\n\n' "$title"
-  printf '%s\n' "$a" "$s" "$u" "$d" "$m" "$t" "$p"
-  printf '\n%s\n\n' "$q"
+    clear
+    echo ""
+    
+    # Beautiful orange title bar with white text
+    print_title_bar "Equipment Management System"
+    echo ""
+    echo ""
+    
+    # Center the menu with elegant spacing
+    center_text "╔══════════════════════════════════════════════════╗"
+    center_text "║                                                  ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}A${RESET} - ${SOFT_YELLOW}Add Equipment${RESET}                   ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}S${RESET} - ${SOFT_YELLOW}Search Equipment${RESET}                ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}U${RESET} - ${SOFT_YELLOW}Update Equipment${RESET}                ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}D${RESET} - ${SOFT_YELLOW}Delete Equipment${RESET}                ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}M${RESET} - ${SOFT_YELLOW}Sort by Model${RESET}                   ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}T${RESET} - ${SOFT_YELLOW}Sort by Status${RESET}                  ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}P${RESET} - ${SOFT_YELLOW}Sort by Type${RESET}                    ║"
+    center_text "║                                                  ║"
+    center_text "║             ${CYAN_HIGHLIGHT}${BOLD}Q${RESET} - ${SOFT_YELLOW}Quit${RESET}                            ║"
+    center_text "║                                                  ║"
+    center_text "╚══════════════════════════════════════════════════╝"
+    echo ""
 }
 
 #========================================Task 2========================================
@@ -291,11 +381,13 @@ add_equipment() {
   while true; do
     if [[ $choice == "Y" ]]; then
       clear
-      printf '%s\n' "Add Equipment Details Form"
-      printf '%s\n' "==========================="
+      echo ""
+      print_title_bar "Add Equipment Details Form"
+      echo ""
       # Input Equipment ID
       while true; do
-        read -rp "Equipment ID(format E0001): " equipment_id
+        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${CYAN_HIGHLIGHT}E0001${RESET}): "
+        read -r equipment_id
         if null_check "$equipment_id" "Equipment ID"; then
           if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
             echo "Invalid Equipment ID format. Please use the format: E0001"
@@ -468,7 +560,9 @@ search_equipment() {
   }
 
   clear
-  printf '%s\n\n' "Search Equipment"
+  echo ""
+  print_title_bar "Search Equipment"
+  echo ""
   while [[ "$search_another" == "Y" ]]; do
 
     if [ ! -f Equipment.txt ]; then
@@ -539,7 +633,9 @@ update_equipment() {
     update_another=${update_another^^}
   }
 
-  printf '%s\n\n' "Update Equipment Details"
+  echo ""
+  print_title_bar "Update Equipment Details"
+  echo ""
   while [[ $update_another == "Y" ]]; do
     if [ ! -f Equipment.txt ]; then
       echo "No equipment registered yet, please register equipment first."
@@ -717,7 +813,7 @@ update_equipment() {
         # Replace old record with updated record
         sed -i "s/^$EquipID:.*/$updated_record/" Equipment.txt
 
-        echo "Equipment updated successfully!"
+        print_success "Equipment updated successfully!"
       elif [[ $confirm_update == "Q" ]]; then
         echo "Update cancelled."
       else
@@ -1018,9 +1114,9 @@ sort_by_type() {
 main_menu() {
   # Read function
   read_input() {
-    clear
     show_menu
-    read -rp "$select" choice
+    printf "${CYAN_HIGHLIGHT}Please select a choice: ${RESET}"
+    read -r choice
     choice=${choice//[[:space:]]/}
   }
   
@@ -1045,12 +1141,15 @@ main_menu() {
     T) sort_by_status ;;
     P) sort_by_type ;;
     Q)
-      echo "Program will exit in 1 second..."
+      clear
+      echo ""
+      center_text "${SOFT_YELLOW}Thank you for using Equipment Management System!" 
+      center_text "${LIGHT_GRAY}Program will exit in 1 second..."
       sleep 1
       break
       ;;
     *) 
-      echo "Invalid option. Try again."
+      print_error "Invalid option. Try again."
       sleep 2
       ;;
     esac
