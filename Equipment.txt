@@ -5,3 +5,4 @@ E0004:mouse:Logitech:AB123425544:Available:2025-08-19:2026-04-25
 E0005:keyboard:Logitech:AB123456877:Unavailable:2025-08-19:2040-08-19
 E0006:laptop:Dell:PE233323333:Available:2012-12-12:2013-12-12
 E0007:keyboard:Logitech:PC123456798:Available:2025-08-19:2100-12-23
+E0001:mouse:HP lapsap:AB123455555:Available:2025-08-31:2025-12-31

@@ -22,3 +22,8 @@ rad.json
 TestResults.xml
 #Instruction PDF
 *.pdf
+
+# Test shell scripts
+*test*.sh
+test_*.sh
+*_test.sh

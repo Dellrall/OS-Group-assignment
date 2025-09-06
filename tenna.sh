@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# tenna.sh made by Lye Wei Lun
+# tenna.sh made by Lye Wei Lun, Lim Yung Juin, Swetha
 
 # Enable alternate screen buffer
 tput smcup             # Save current terminal content and switch to alternate buffer
@@ -13,11 +13,11 @@ trap 'tput rmcup' EXIT # Restore original terminal content on exit
 title="Equipment Maintenance Menu"
 a="A - Add New Computer Lab Equipment Details"
 s="S - Search Equipment by Serial Number"
-u="U - Update an Equipmement Details"
-d="D - Delete an Equipmement Details"
+u="U - Update an Equipment Details"
+d="D - Delete an Equipment Details"
 m="M - Sort Equipment by Model"
-t="T - Sort Equipment by Status"
-p="P - Sort Equipment by Type"
+t="T - Sort equipment by Status"
+p="P - Sort equipment by Type"
 q="Q - Exit from Program"
 select="Please select a choice: "
 
@@ -171,7 +171,7 @@ add_equipment() {
             sleep 2
             tput cuu 3
             tput ed
-          elif [[ -f Equipment.txt && -n $(grep -w "$equipment_id" Equipment.txt) ]]; then
+          elif [[ -f Equipment.txt && -n $(grep "^$equipment_id:" Equipment.txt) ]]; then
             echo "Equipment ID already exists. Please enter a unique ID."
             sleep 2
             tput cuu 2
@@ -211,7 +211,7 @@ add_equipment() {
             sleep 2
             tput cuu 2
             tput ed
-          elif [[ -f Equipment.txt && -n $(grep -w "$equipment_serial" Equipment.txt) ]]; then
+          elif [[ -f Equipment.txt && -n $(grep ":$equipment_serial:" Equipment.txt) ]]; then
             echo "Serial Number already exists. Please enter a unique Serial Number."
             sleep 2
             tput cuu 2
@@ -299,15 +299,13 @@ add_equipment() {
 
       if [ ! -f Equipment.txt ]; then
         touch Equipment.txt
-        if  grep -q "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" Equipment.txt; then
-          echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >>Equipment.txt
-          echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt
-        fi
-
+        echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >> Equipment.txt
+        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >> Equipment.txt
       else
-        echo -n ""
-        echo "Equipment.txt already exists, new field added"
-        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >>Equipment.txt 
+        if ! grep -q "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" Equipment.txt; then
+          echo "ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate" >> Equipment.txt
+        fi
+        echo "$equipment_id:$equipment_type:$equipment_model:$equipment_serial:$equipment_status:$purchase_backend:$expiry_backend" >> Equipment.txt
       fi
 
       #Return or add new equipment
@@ -372,30 +370,28 @@ search_equipment() {
       #Get infor from information field separator
       IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$record"
 
+      # Display dates in YYYY-MM-DD format as per PDF specification
+      display_purchase="$eq_purchase_date"
+      display_warranty="$eq_expiry_date"
+
       printf '\n'
       echo "Equipment ID: $eq_id"
       echo "Type: $eq_type"
       echo "Model: $eq_model"
-      echo "Serial: $eq_serial"
-      echo "Status: $eq_status"
-      echo "Purchase Date: $eq_purchase_date"
-      echo "Warranty Date: $eq_expiry_date"
+      echo "Status (Available / Unavailable): $eq_status"
+      echo "Purchase Date (YYYY-MM-DD): $display_purchase"
+      echo "Warranty Date (YYYY-MM-DD): $display_warranty"
       printf '\n'
       echo "-------------------------------------------------------------------------"
 
       printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
       confirmation
 
-    elif [[ $search_another == "Q" ]]; then
-      echo "Returning to Equipment Maintenance Menu...."
-      sleep 1
-    else
-      echo "Invalid choice, please enter either y or q"
-      sleep 2
-      tput cuu 3
-      tput ed
-      printf '\n'
-      confirmation
+      if [[ $search_another == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
+        sleep 2
+        break
+      fi
     fi
   done
 }
@@ -431,7 +427,7 @@ update_equipment() {
         tput cuu 3
         tput ed
         continue
-      elif ! grep -q "$EquipID:" Equipment.txt; then
+      elif ! grep -q "^${EquipID}:" Equipment.txt; then
         echo "No equipment found with ID: $EquipID"
         sleep 2
         tput cuu 3
@@ -440,13 +436,27 @@ update_equipment() {
       fi
 
       # Find the matching record and extract fields
-      record=$(grep "$EquipID:" Equipment.txt)
+      record=$(grep "^${EquipID}:" Equipment.txt)
       # Get info from information field separator
       IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$record"
 
+      # Display dates in YYYY-MM-DD format as per PDF specification
+      display_purchase="$eq_purchase_date"
+      display_warranty="$eq_expiry_date"
+
+      printf '\nCurrent Equipment Details:\n'
+      echo "Equipment ID: $eq_id"
+      echo "Type: $eq_type"
+      echo "Model: $eq_model"
+      echo "Serial Number: $eq_serial"
+      echo "Status (Available / Unavailable): $eq_status"
+      echo "Purchase Date (YYYY-MM-DD): $display_purchase"
+      echo "Warranty Date (YYYY-MM-DD): $display_warranty"
+      printf '\n'
+
       # Prompt for new values
       while true; do
-        read -rp "New Serial Number: " new_serial
+        read -rp "New Serial Number (leave empty to keep current): " new_serial
         if [[ -n $new_serial ]]; then
           if [[ ! "$new_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
             echo "Invalid Serial Number format. Keeping current value."
@@ -454,7 +464,7 @@ update_equipment() {
             tput cuu 1
             tput ed
             new_serial=""
-          elif grep -q "$new_serial:" Equipment.txt; then
+          elif grep -q ":$new_serial:" Equipment.txt && ! grep -q "^${EquipID}:.*:$new_serial:" Equipment.txt; then
             echo "Duplicate Serial in another record. Ignoring."
             new_serial=""
           fi
@@ -463,7 +473,7 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Type: " new_type
+        read -rp "New Type (leave empty to keep current): " new_type
         if [[ -n $new_type ]]; then
           if [[ ! "$new_type" == "keyboard" && ! "$new_type" == "mouse" && ! "$new_type" == "monitor" && ! "$new_type" == "webcam" && ! "$new_type" == "mousepad" && ! "$new_type" == "laptop" ]]; then
             echo "Invalid equipment type. Keeping current value."
@@ -477,7 +487,7 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Model: " new_model
+        read -rp "New Model (leave empty to keep current): " new_model
         if [[ -n $new_model ]]; then
           if [[ ! "$new_model" =~ ^[A-Za-z0-9\ ]+$ ]]; then
             echo "Invalid Model format. Keeping current value."
@@ -491,7 +501,7 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Status: " new_status
+        read -rp "New Status (Available/Unavailable, leave empty to keep current): " new_status
         if [[ -n $new_status ]]; then
           if [[ ! "$new_status" == "Available" && ! "$new_status" == "Unavailable" ]]; then
             echo "Invalid status. Keeping current value."
@@ -499,7 +509,6 @@ update_equipment() {
             tput cuu 1
             tput ed
             new_status=""
-            break
           fi
         fi
         break
@@ -507,7 +516,7 @@ update_equipment() {
 
       # Purchase Date with format validation
       while true; do
-        read -rp "New Purchase Date: " new_purchase_date
+        read -rp "New Purchase Date (YYYY-MM-DD, leave empty to keep current): " new_purchase_date
         if [[ -z "$new_purchase_date" ]]; then
           break
         fi
@@ -516,18 +525,17 @@ update_equipment() {
         else
           echo "Please try again or leave empty to keep current date."
         fi
-        break
       done
 
       # Warranty Date with format validation
       while true; do
-        read -rp "New Warranty Date: " new_expiry_date
+        read -rp "New Warranty Date (YYYY-MM-DD, leave empty to keep current): " new_expiry_date
         if [[ -z "$new_expiry_date" ]]; then
           break
         fi
-        if validate_date "$new_expiry_date" "Invalid warranty date." "YYYY-MM-DD"; then
-          sleep 2
-          break
+        if ! validate_date "$new_expiry_date" "Invalid warranty date." "YYYY-MM-DD"; then
+          echo "Please try again or leave empty to keep current date."
+          continue
         fi
 
         # Check if warranty is at least 30 days after purchase
@@ -535,12 +543,14 @@ update_equipment() {
         purchase_iso="$purchase_check_date"
         warranty_iso="$new_expiry_date"
 
-        if purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) &&
-          warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
+        if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) || 
+           ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
           echo "Error processing dates. Please try again."
+          continue
         fi
+        
         difference_days=$(((warranty_date_seconds - purchase_date_seconds) / 86400))
-        if ((difference_days >= 30)); then
+        if ((difference_days < 30)); then
           echo "Warranty date must be at least 30 days after purchase date."
           continue
         fi
@@ -555,27 +565,43 @@ update_equipment() {
       [[ -n $new_purchase_date ]] && eq_purchase_date=$new_purchase_date
       [[ -n $new_expiry_date ]] && eq_expiry_date=$new_expiry_date
 
-      # Create updated record
-      updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
-
-      # Replace old record with updated record
-      sed -i "s/^$EquipID:.*/$updated_record/" Equipment.txt
-
-      printf '\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-      confirmation
-
-    elif [[ $update_another == "Q" ]]; then
-      sleep 2
-      printf '%s\n' "Returning to Equipment Maintenance Menu...."
-    else
-      echo "Invalid choice, please enter either y or q"
-      sleep 2
-      tput cuu 3
-      tput ed
+      # Show updated details and confirm
+      printf '\nUpdated Equipment Details:\n'
+      echo "Equipment ID: $eq_id"
+      echo "Type: $eq_type"
+      echo "Model: $eq_model"
+      echo "Serial Number: $eq_serial"
+      echo "Status (Available / Unavailable): $eq_status"
+      echo "Purchase Date (YYYY-MM-DD): $eq_purchase_date"
+      echo "Warranty Date (YYYY-MM-DD): $eq_expiry_date"
       printf '\n'
-      confirmation
-    fi
+      echo "-------------------------------------------------------------------------"
+      
+      read -rp "Are you sure you want to UPDATE the above Equipment Details? (y)es or (q)uit: " confirm_update
+      confirm_update=${confirm_update^^}
+      if [[ $confirm_update == "Y" ]]; then
+        # Create updated record
+        updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
 
+        # Replace old record with updated record
+        sed -i "s/^$EquipID:.*/$updated_record/" Equipment.txt
+
+        echo "Equipment updated successfully!"
+      elif [[ $confirm_update == "Q" ]]; then
+        echo "Update cancelled."
+      else
+        echo "Invalid choice, please enter either y or q"
+        sleep 2
+        continue
+      fi
+      confirmation
+
+      if [[ $update_another == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
+        sleep 2
+        break
+      fi
+    fi
   done
 }
 
@@ -585,13 +611,14 @@ update_equipment() {
 # Delete Equipment
 delete_equipment() {
   clear
+  delete_another="Y"
   confirmation() {
     read -rp "Delete another Equipment? (y)es or (q)uit: " delete_another
     delete_another=${delete_another^^}
   }
 
   printf '%s\n\n' "Delete Equipment Details"
-  while true; do
+  while [[ $delete_another == "Y" ]]; do
     if [[ ! -f Equipment.txt ]]; then
       echo "Equipment file not found, unable to delete."
       echo "-------------------------------------------------------------------------"
@@ -620,17 +647,22 @@ delete_equipment() {
       #Get infor from information field separator
       IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$record"
 
+      # Display dates in YYYY-MM-DD format as per PDF specification
+      display_purchase="$eq_purchase_date"
+      display_warranty="$eq_expiry_date"
+
       printf '\n'
+      echo "Equipment ID: $eq_id"
       echo "Type: $eq_type"
       echo "Model: $eq_model"
-      echo "Serial: $eq_serial"
-      echo "Status: $eq_status"
-      echo "Purchase Date: $eq_purchase_date"
-      echo "Warranty Date: $eq_expiry_date"
+      echo "Serial Number: $eq_serial"
+      echo "Status (Available / Unavailable): $eq_status"
+      echo "Purchase Date (YYYY-MM-DD): $display_purchase"
+      echo "Warranty Date (YYYY-MM-DD): $display_warranty"
       printf '\n'
       echo "-------------------------------------------------------------------------"
 
-      read -rp "Are you sure you want to DELETE the above Equipment details? (y)es or (q)uit: " confirm_delete
+      read -rp "Are you sure you want to DELETE the above Equipment Details? (y)es or (q)uit: " confirm_delete
       confirm_delete=${confirm_delete^^}
       if [[ $confirm_delete == "Y" ]]; then
         sed -i "/^$EquipID:/d" Equipment.txt
@@ -638,20 +670,18 @@ delete_equipment() {
         sleep 2
       elif [[ $confirm_delete == "Q" ]]; then
         echo "Deletion of Equipment ID $EquipID cancelled."
+        sleep 2
       else
         echo "Invalid choice, please enter either y or q"
         sleep 2
-        tput cuu 3
-        tput ed
-        printf '\n'
+        continue
       fi
 
       confirmation
-      if [[ $delete_another == "Y" ]]; then
-        delete_equipment
-      elif [[ $delete_another == "Q" ]]; then
+      if [[ $delete_another == "Q" ]]; then
+        echo "Returning to Equipment Maintenance Menu...."
         sleep 2
-        printf '%s\n' "Returning to Equipment Maintenance Menu...."
+        break
       fi
   done
 }
@@ -671,7 +701,8 @@ sort_by_model() {
       printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
       for line in "${rows[@]}"; do
         IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$warranty"
+        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$display_warranty"
       done
     } > "$out_file"
     echo "Exported to $out_file"
@@ -697,28 +728,27 @@ sort_by_model() {
     return
   fi
 
-  printf '%-20s %-15s %-12s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Status  |" "|  Warranty Date  |"
-  printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+  printf '%-20s %-15s %-12s %-25s %-15s %-20s\n' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Status  |" "|  Warranty Date  |"
+  printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
   for row in "${rows[@]}"; do
     IFS=':' read -r id type model serial status purchase warranty <<< "$row"
-    printf '\n%-20s %-20s %-15s %-22s %-16s %-20s'  "  $model" "$id" "$type" "$serial" "$status" "$warranty"
+    # Convert dates for display
+    display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+    printf '%-20s %-20s %-15s %-22s %-16s %-20s\n'  "  $model" "$id" "$type" "$serial" "$status" "$display_warranty"
   done
 
-  printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-  
+  echo
   read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
   choice=${choice^^}
   if [[ "$choice" == "Y" ]]; then
     export_file
+    read -rp "Press Enter to continue..."
   elif [[ "$choice" == "Q" ]]; then
     echo "Returning to Equipment Maintenance Menu...."
     sleep 2
   else
     echo "Invalid choice, please enter either y or q"
     sleep 2
-    tput cuu 3
-    tput ed
-    printf '\n'
   fi
 }
 
@@ -728,11 +758,13 @@ sort_by_status() {
   export_file() { 
    out_file="Report_By_Status_${EqStatus// /_}.txt"
     {
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "-----" "-----------" "----" "-------------" "------" "-------------" "------------"
       for line in "${rows[@]}"; do
         IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_type" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
+        display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+        printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$model" "$id" "$type" "$serial" "$status" "$display_purchase" "$display_warranty"
       done
     } > "$out_file"
     echo "Exported to $out_file"
@@ -740,63 +772,66 @@ sort_by_status() {
   clear
   printf '\n%s\n\n' "Equipment Details Sorted By Status"
 
-if  [[ ! -f Equipment.txt ]]; then
-  echo -n "Equipment file not found, please add equipment first."
-  echo "-------------------------------------------------------------------------------"
-fi
+  if [[ ! -f Equipment.txt ]]; then
+    echo "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
  
   while true; do
-   read -rp "Enter Equipment Status: " EqStatus
-   EqStatus=${EqStatus^} # Convert to uppercase for case-insensitive comparison
+   read -rp "Enter Equipment Status (Available/Unavailable): " EqStatus
+   EqStatus=${EqStatus^} # Convert to title case
    echo "-------------------------------------------------------------------------------"
-  if null_check "$EqStatus" "Equipment Status"; then
-    if [[ ! "$EqStatus" == "Unavailable" &&  ! "$EqStatus" == "Available" ]]; then
-      echo "Invalid equipment status. Please enter a valid status."
+   if null_check "$EqStatus" "Equipment Status"; then
+    if [[ "$EqStatus" != "Unavailable" && "$EqStatus" != "Available" ]]; then
+      echo "Invalid equipment status. Please enter Available or Unavailable."
       sleep 2
       tput cuu 3
       tput ed
       continue
     fi
-  fi
-       # Get matching rows (skip header if present), case-insensitive match on 2nd field, sort by Model (col 3)
-  mapfile -t rows < <(
-    awk -F: -v t="$EqStatus" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $5==t{print}' Equipment.txt \
-      | sort -t: -k3,3 -f
-  )
-   if ((${#rows[@]} == 0)); then
-    echo "No equipment found for status: $EqStatus"
-    sleep 2
-    tput cuu 3
-    tput ed
-    continue
-  fi
-      printf '%-10s %-15s %-15s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Type  |" "|  Serial Number  |" "|  Purchase Date  |" "|  Warranty Date  |"
-      printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────" 
-      for row in "${rows[@]}"; do
-        IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
-        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_type" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
-      done  
-      printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-
-      read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
-      choice=${choice^^}
-      if [[ "$choice" == "Y" ]]; then
+   
+    # Get matching rows (skip header if present), case-insensitive match on Status field (col 5), sort by Model (col 3)
+    mapfile -t rows < <(
+      awk -F: -v t="$EqStatus" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $5==t{print}' Equipment.txt \
+        | sort -t: -k3,3 -f
+    )
+    
+    if ((${#rows[@]} == 0)); then
+      echo "No equipment found for status: $EqStatus"
+      sleep 2
+      tput cuu 3
+      tput ed
+      continue
+    fi
+    
+    printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
+    printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+    for row in "${rows[@]}"; do
+      IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
+      # Convert dates for display
+      display_purchase=$(convert_date_format "$eq_purchase_date" "YYYY-MM-DD" "MM-DD-YYYY")
+      display_warranty=$(convert_date_format "$eq_expiry_date" "YYYY-MM-DD" "MM-DD-YYYY")
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$eq_model" "$eq_id" "$eq_type" "$eq_serial" "$eq_status" "$display_purchase" "$display_warranty"
+    done  
+    
+    echo
+    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+    choice=${choice^^}
+    if [[ "$choice" == "Y" ]]; then
       export_file
+      read -rp "Press Enter to continue..."
       break
-      elif [[ "$choice" == "Q" ]]; then
-        echo "Returning to Equipment Maintenance Menu...."
-        sleep 2
-        break
-      else
-        echo "Invalid choice, please enter either y or q"
-        sleep 2
-        tput cuu 3
-        tput ed
-        printf '\n'
-      fi
-
-    done
-  
+    elif [[ "$choice" == "Q" ]]; then
+      echo "Returning to Equipment Maintenance Menu...."
+      sleep 2
+      break
+    else
+      echo "Invalid choice, please enter either y or q"
+      sleep 2
+    fi
+   fi
+  done
 }
 #--------------------------------------------------------------------------------------
 # Sort by Type
@@ -804,11 +839,13 @@ sort_by_type() {
   export_file() { 
    out_file="Report_By_Type_${EquipType// /_}.txt"
     {
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Warranty Date"
-      printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "------------------------------" "-----------" "----" "------------------" "------" "------------"
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "-----" "-----------" "----" "-------------" "------" "-------------" "------------"
       for line in "${rows[@]}"; do
         IFS=':' read -r id type model serial status purchase warranty <<< "$line"
-        printf '%-30s %-12s %-10s %-18s %-12s %-12s\n' "$model" "$id" "$type" "$serial" "$status" "$warranty"
+        display_purchase=$(convert_date_format "$purchase" "YYYY-MM-DD" "MM-DD-YYYY")
+        display_warranty=$(convert_date_format "$warranty" "YYYY-MM-DD" "MM-DD-YYYY")
+        printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$model" "$id" "$type" "$serial" "$status" "$display_purchase" "$display_warranty"
       done
     } > "$out_file"
     echo "Exported to $out_file"
@@ -816,61 +853,66 @@ sort_by_type() {
   clear
   printf '\n%s\n\n' "Equipment Details Sorted By Type"
 
-if  [[ ! -f Equipment.txt ]]; then
-  echo -n "Equipment file not found, please add equipment first."
-  echo "-------------------------------------------------------------------------------"
-fi
+  if [[ ! -f Equipment.txt ]]; then
+    echo "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
  
   while true; do
-   read -rp "Enter equipment Type: " EquipType
+   read -rp "Enter equipment Type (keyboard/mouse/monitor/webcam/mousepad/laptop): " EquipType
+   EquipType=${EquipType,,} # Convert to lowercase
    echo "-------------------------------------------------------------------------------"
-  if null_check "$EquipType" "Equipment Type"; then
-    if [[ ! "$EquipType" == "keyboard" && ! "$EquipType" == "mouse" && ! "$EquipType" == "monitor" && ! "$EquipType" == "webcam" && ! "$EquipType" == "mousepad" && ! "$EquipType" == "laptop" ]]; then
-      echo "Invalid equipment type. Please enter a valid type."
+   if null_check "$EquipType" "Equipment Type"; then
+    if [[ "$EquipType" != "keyboard" && "$EquipType" != "mouse" && "$EquipType" != "monitor" && "$EquipType" != "webcam" && "$EquipType" != "mousepad" && "$EquipType" != "laptop" ]]; then
+      echo "Invalid equipment type. Please enter keyboard, mouse, monitor, webcam, mousepad, or laptop."
       sleep 2
       tput cuu 3
       tput ed
       continue
     fi
-  fi
-       # Get matching rows (skip header if present), case-insensitive match on 2nd field, sort by Model (col 3)
-  mapfile -t rows < <(
-    awk -F: -v t="$EquipType" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $2==t{print}' Equipment.txt \
-      | sort -t: -k3,3 -f
-  )
-   if ((${#rows[@]} == 0)); then
-    echo "No equipment found for type: $EquipType"
-    sleep 2
-    tput cuu 3
-    tput ed
-    continue
-  fi
-      printf '%-10s %-15s %-15s %-25s %-15s %-20s' "|  Model  |" "|  Equipment ID  |" "|  Status  |" "|  Serial Number  |" "|  Purchase Date  |" "|  Warranty Date  |"
-      printf '\n%s'"────────────────────────────────────────────────────────────────────────────────────────────────────────────────" 
-      for row in "${rows[@]}"; do
-        IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
-        printf '\n%-15s %-15s %-15s %-25s %-15s %-20s' "   $eq_model" "   $eq_id" "  $eq_status" "   $eq_serial" "   $eq_purchase_date" "      $eq_expiry_date"
-      done  
-      printf '\n\n%s\n\n' "Press (q) to return to Equipment Maintenance Menu."
-
-      read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
-      choice=${choice^^}
-      if [[ "$choice" == "Y" ]]; then
+   
+    # Get matching rows (skip header if present), case-insensitive match on Type field (col 2), sort by Model (col 3)
+    mapfile -t rows < <(
+      awk -F: -v t="$EquipType" 'BEGIN{IGNORECASE=1} NR==1 && /^ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate$/ {next} $2==t{print}' Equipment.txt \
+        | sort -t: -k3,3 -f
+    )
+    
+    if ((${#rows[@]} == 0)); then
+      echo "No equipment found for type: $EquipType"
+      sleep 2
+      tput cuu 3
+      tput ed
+      continue
+    fi
+    
+    printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "Model" "Equipment ID" "Type" "Serial Number" "Status" "Purchase Date" "Warranty Date"
+    printf '%s\n' "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+    for row in "${rows[@]}"; do
+      IFS=':' read -r eq_id eq_type eq_model eq_serial eq_status eq_purchase_date eq_expiry_date <<<"$row"
+      # Convert dates for display
+      display_purchase=$(convert_date_format "$eq_purchase_date" "YYYY-MM-DD" "MM-DD-YYYY")
+      display_warranty=$(convert_date_format "$eq_expiry_date" "YYYY-MM-DD" "MM-DD-YYYY")
+      printf '%-15s %-15s %-15s %-25s %-15s %-15s %-20s\n' "$eq_model" "$eq_id" "$eq_type" "$eq_serial" "$eq_status" "$display_purchase" "$display_warranty"
+    done  
+    
+    echo
+    read -rp "Would you like to export the report as ASCII text file? (y)es or (q)uit: " choice
+    choice=${choice^^}
+    if [[ "$choice" == "Y" ]]; then
       export_file
+      read -rp "Press Enter to continue..."
       break
-      elif [[ "$choice" == "Q" ]]; then
-        echo "Returning to Equipment Maintenance Menu...."
-        sleep 2
-        break
-      else
-        echo "Invalid choice, please enter either y or q"
-        sleep 2
-        tput cuu 3
-        tput ed
-        printf '\n'
-      fi
-
-    done
+    elif [[ "$choice" == "Q" ]]; then
+      echo "Returning to Equipment Maintenance Menu...."
+      sleep 2
+      break
+    else
+      echo "Invalid choice, please enter either y or q"
+      sleep 2
+    fi
+   fi
+  done
 }
 #--------------------------------------------------------------------------------------
 
@@ -883,6 +925,7 @@ main_menu() {
     read -rp "$select" choice
     choice=${choice//[[:space:]]/}
   }
+  
   # Main loop
   while true; do
     # Read user input and validate input
@@ -890,13 +933,10 @@ main_menu() {
     if [[ ${#choice} -ne 1 ]]; then
       echo "Invalid: enter exactly one letter."
       sleep 2
-      tput cuu 3
-      tput ed
-      echo
       continue
     fi
+    
     # Normalize to uppercase first letter only
-
     choice=${choice^^}
     case ${choice:0:1} in
     A) add_equipment ;;
@@ -911,13 +951,11 @@ main_menu() {
       sleep 1
       break
       ;;
-    *) echo "Invalid option. Try again." ;;
+    *) 
+      echo "Invalid option. Try again."
+      sleep 2
+      ;;
     esac
-    sleep 2
-    tput cuu 3
-    tput ed
-    echo
-    continue
   done
 }
 
