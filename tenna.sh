@@ -28,13 +28,19 @@ print_title_bar() {
     local title="$1"
     local term_width=$(tput cols 2>/dev/null || echo "80")
     local title_length=${#title}
-    local padding=$(( (term_width - title_length - 4) / 2 ))  # -4 for spaces around title
+    local padding=$(( (term_width - title_length) / 2 ))
     
-    # Create full-width orange background with white text
+    # Create infinite-width orange background that spans full terminal
     printf "${ORANGE_BG}${WHITE_TEXT}${BOLD}"
-    printf "%*s" "$term_width" ""  # Full width orange background
-    printf "\r"  # Return to start of line
-    printf "%*s  %s  %*s" "$padding" "" "$title" "$padding" ""
+    
+    # Fill entire line with orange background
+    for ((i=0; i<term_width; i++)); do
+        printf " "
+    done
+    
+    # Move cursor back to beginning and print centered title
+    printf "\r"
+    printf "%*s%s%*s" "$padding" "" "$title" "$((term_width - padding - title_length))" ""
     printf "${RESET}\n"
 }
 
