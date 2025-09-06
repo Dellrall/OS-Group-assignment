@@ -212,23 +212,25 @@ format_equipment_table() {
     done
   fi
   
-  # Generate format string
+  # Generate format string and separator
   local format_str=""
-  local separator_str=""
+  local separator_line=""
   for i in "${!max_widths[@]}"; do
     format_str+="%-${max_widths[i]}s"
-    separator_str+="$(printf '%*s' "${max_widths[i]}" '' | tr ' ' '-')"
+    # Create separator with proper width (minimum 1 character)
+    local width=${max_widths[i]}
+    [[ $width -lt 1 ]] && width=1
+    separator_line+="$(printf '%*s' "$width" '' | tr ' ' '-')"
     if [[ $i -lt $((col_count - 1)) ]]; then
       format_str+=" | "
-      separator_str+=" | "
+      separator_line+=" | "
     fi
   done
   format_str+="\n"
-  separator_str+="\n"
   
   # Print table header
   printf "$format_str" "${headers[@]}"
-  printf "$separator_str"
+  echo "$separator_line"
   
   # Print data rows
   for row in "${data_rows[@]}"; do
