@@ -21,17 +21,17 @@ SENJOU_CATEGORY="\033[95m"    # Bright magenta for categories
 SENJOU_HIGHLIGHT="\033[35m"   # Purple for highlighted data
 SENJOU_DATA="\033[38;5;183m"  # Soft lavender for regular data
 
-# Hachikuji Mayoi - Yellow/Golden theme (bright, energetic)
-MAYOI_HEADER="\033[48;5;214m" # Golden orange background
-MAYOI_CATEGORY="\033[93m"     # Bright yellow for categories
-MAYOI_HIGHLIGHT="\033[33m"    # Golden yellow for highlighted data
-MAYOI_DATA="\033[38;5;228m"   # Pale yellow for regular data
+# Hachikuji Mayoi - White/Black/Green theme (school uniform colors)
+MAYOI_HEADER="\033[48;5;22m"  # Dark green background
+MAYOI_CATEGORY="\033[97m"     # Bright white for categories  
+MAYOI_HIGHLIGHT="\033[92m"    # Bright green for highlighted data
+MAYOI_DATA="\033[37m"         # Light gray for regular data
 
-# Shinobu Oshino - Red/Pink theme (dramatic, powerful)
-SHINOBU_HEADER="\033[48;5;161m" # Deep pink background
-SHINOBU_CATEGORY="\033[91m"     # Bright red for categories
-SHINOBU_HIGHLIGHT="\033[31m"    # Dark red for highlighted data
-SHINOBU_DATA="\033[38;5;217m"   # Soft pink for regular data
+# Shinobu Oshino (Monogatari) - Golden blonde/elegant cream theme
+SHINOBU_HEADER="\033[48;5;220m" # Golden yellow background
+SHINOBU_CATEGORY="\033[38;5;136m"     # Dark golden brown for categories
+SHINOBU_HIGHLIGHT="\033[38;5;178m"    # Bright gold for highlighted data
+SHINOBU_DATA="\033[38;5;230m"   # Cream/ivory for regular data
 
 # Color Functions
 print_title_bar() {
@@ -76,7 +76,7 @@ print_mayoi_title_bar() {
   local title_length=${#title}
   local padding=$(((term_width - title_length) / 2))
 
-  printf "${MAYOI_HEADER}${BLACK_TEXT}${BOLD}"
+  printf "${MAYOI_HEADER}${WHITE_TEXT}${BOLD}"
   for ((i = 0; i < term_width; i++)); do
     printf " "
   done
@@ -91,7 +91,7 @@ print_shinobu_title_bar() {
   local title_length=${#title}
   local padding=$(((term_width - title_length) / 2))
 
-  printf "${SHINOBU_HEADER}${WHITE_TEXT}${BOLD}"
+  printf "${SHINOBU_HEADER}${BLACK_TEXT}${BOLD}"
   for ((i = 0; i < term_width; i++)); do
     printf " "
   done
@@ -1279,20 +1279,26 @@ sort_by_model() {
   INCLUDE_PURCHASE_DATE=false format_character_table "senjou" "${rows[@]}"
 
   echo
-  printf "${SENJOU_CATEGORY}Would you like to export the report as ASCII text file? ${SENJOU_HIGHLIGHT}(y)es${RESET} or ${SENJOU_HIGHLIGHT}(q)uit${RESET}: "
-  read -r choice
-  choice=${choice^^}
-  if [[ "$choice" == "Y" ]]; then
-    export_file
-    printf "${SENJOU_DATA}Press Enter to continue...${RESET}"
-    read -r
-  elif [[ "$choice" == "Q" ]]; then
-    print_success "Returning to Equipment Maintenance Menu...."
-    sleep 2
-  else
-    print_error "Invalid choice, please enter either y or q"
-    sleep 2
-  fi
+  while true; do
+    printf "${SENJOU_CATEGORY}Would you like to export the report as ASCII text file? ${SENJOU_HIGHLIGHT}(y)es${RESET} or ${SENJOU_HIGHLIGHT}(q)uit${RESET}: "
+    read -r choice
+    choice=${choice^^}
+    if [[ "$choice" == "Y" ]]; then
+      export_file
+      printf "${SENJOU_DATA}Press Enter to continue...${RESET}"
+      read -r
+      break
+    elif [[ "$choice" == "Q" ]]; then
+      print_success "Returning to Equipment Maintenance Menu...."
+      sleep 2
+      break
+    else
+      print_error "Invalid choice, please enter either y or q"
+      sleep 2
+      tput cuu 2  # Move cursor up 2 lines
+      tput ed     # Clear from cursor to end of screen
+    fi
+  done
 }
 
 #--------------------------------------------------------------------------------------
@@ -1352,22 +1358,27 @@ sort_by_status() {
       INCLUDE_PURCHASE_DATE=true format_character_table "mayoi" "${rows[@]}"
 
       echo
-      printf "${MAYOI_CATEGORY}Would you like to export the report as ASCII text file? ${MAYOI_HIGHLIGHT}(y)es${RESET} or ${MAYOI_HIGHLIGHT}(q)uit${RESET}: "
-      read -r choice
-      choice=${choice^^}
-      if [[ "$choice" == "Y" ]]; then
-        export_file
-        printf "${MAYOI_DATA}Press Enter to continue...${RESET}"
-        read -r
-        break
-      elif [[ "$choice" == "Q" ]]; then
-        print_success "Returning to Equipment Maintenance Menu...."
-        sleep 2
-        break
-      else
-        print_error "Invalid choice, please enter either y or q"
-        sleep 2
-      fi
+      while true; do
+        printf "${MAYOI_CATEGORY}Would you like to export the report as ASCII text file? ${MAYOI_HIGHLIGHT}(y)es${RESET} or ${MAYOI_HIGHLIGHT}(q)uit${RESET}: "
+        read -r choice
+        choice=${choice^^}
+        if [[ "$choice" == "Y" ]]; then
+          export_file
+          printf "${MAYOI_DATA}Press Enter to continue...${RESET}"
+          read -r
+          break
+        elif [[ "$choice" == "Q" ]]; then
+          print_success "Returning to Equipment Maintenance Menu...."
+          sleep 2
+          break
+        else
+          print_error "Invalid choice, please enter either y or q"
+          sleep 2
+          tput cuu 2  # Move cursor up 2 lines
+          tput ed     # Clear from cursor to end of screen
+        fi
+      done
+      break
     fi
   done
 }
@@ -1428,25 +1439,74 @@ sort_by_type() {
       INCLUDE_PURCHASE_DATE=true format_character_table "shinobu" "${rows[@]}"
 
       echo
-      printf "${SHINOBU_CATEGORY}Would you like to export the report as ASCII text file? ${SHINOBU_HIGHLIGHT}(y)es${RESET} or ${SHINOBU_HIGHLIGHT}(q)uit${RESET}: "
-      read -r choice
-      choice=${choice^^}
-      if [[ "$choice" == "Y" ]]; then
-        export_file
-        printf "${SHINOBU_DATA}Press Enter to continue...${RESET}"
-        read -r
-        break
-      elif [[ "$choice" == "Q" ]]; then
-        print_success "Returning to Equipment Maintenance Menu...."
-        sleep 2
-        break
-      else
-        print_error "Invalid choice, please enter either y or q"
-        sleep 2
-      fi
+      while true; do
+        printf "${SHINOBU_CATEGORY}Would you like to export the report as ASCII text file? ${SHINOBU_HIGHLIGHT}(y)es${RESET} or ${SHINOBU_HIGHLIGHT}(q)uit${RESET}: "
+        read -r choice
+        choice=${choice^^}
+        if [[ "$choice" == "Y" ]]; then
+          export_file
+          printf "${SHINOBU_DATA}Press Enter to continue...${RESET}"
+          read -r
+          break
+        elif [[ "$choice" == "Q" ]]; then
+          print_success "Returning to Equipment Maintenance Menu...."
+          sleep 2
+          break
+        else
+          print_error "Invalid choice, please enter either y or q"
+          sleep 2
+          tput cuu 2  # Move cursor up 2 lines
+          tput ed     # Clear from cursor to end of screen
+        fi
+      done
+      break
     fi
   done
 }
+# Undertale-inspired thank you screen
+show_undertale_thanks() {
+  # Set black background and white text
+  local BLACK_BG="\033[40m"
+  local WHITE_TEXT="\033[97m"
+  local RED_HEART="\033[91m♥\033[0m"
+  local RESET="\033[0m"
+  
+  # Clear screen and set black background
+  clear
+  printf "${BLACK_BG}"
+  
+  # Fill entire screen with black background
+  local term_height=$(tput lines 2>/dev/null || echo "24")
+  local term_width=$(tput cols 2>/dev/null || echo "80")
+  
+  for ((i = 0; i < term_height; i++)); do
+    printf "%*s\n" "$term_width" ""
+  done
+  
+  # Move cursor to center of screen
+  local center_row=$((term_height / 2 - 4))
+  tput cup $center_row 0
+  
+  # Display thank you message with red heart
+  center_text "${WHITE_TEXT}${BOLD}Thank you for using Equipment Management System!${RESET}${BLACK_BG}"
+  echo ""
+  center_text "${RED_HEART} ${WHITE_TEXT}Created with ${RED_HEART} by Lye Wei Lun, Lim Yung Juin, Swetha ${RED_HEART}${RESET}${BLACK_BG}"
+  echo ""
+  center_text "${WHITE_TEXT}Your equipment data has been safely managed.${RESET}${BLACK_BG}"
+  echo ""
+  center_text "${WHITE_TEXT}Have a wonderful day! ${RED_HEART}${RESET}${BLACK_BG}"
+  echo ""
+  echo ""
+  center_text "${WHITE_TEXT}${BOLD}* (Press any key to continue...)${RESET}${BLACK_BG}"
+  
+  # Wait for user input
+  read -n 1 -s
+  
+  # Clear screen and reset colors
+  clear
+  printf "${RESET}"
+}
+
 #--------------------------------------------------------------------------------------
 
 # Main menu
@@ -1482,6 +1542,7 @@ main_menu() {
     Q)
       print_success "Program will exit in 1 second..."
       sleep 1
+      show_undertale_thanks
       break
       ;;
     *)
