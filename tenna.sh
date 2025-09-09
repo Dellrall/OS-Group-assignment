@@ -682,7 +682,7 @@ add_equipment() {
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Add another new Equipment details? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r choice
-    choice=${choice^^}
+    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
   }
   while true; do
     if [[ $choice == "Y" ]]; then
@@ -867,7 +867,7 @@ search_equipment() {
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Search another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r search_another
-    search_another=${search_another^^}
+    search_another=$(echo "$search_another" | tr '[:lower:]' '[:upper:]')
   }
 
   clear
@@ -945,7 +945,7 @@ update_equipment() {
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Update another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r update_another
-    update_another=${update_another^^}
+    update_another=$(echo "$update_another" | tr '[:lower:]' '[:upper:]')
   }
 
   echo ""
@@ -1122,7 +1122,7 @@ update_equipment() {
       echo "-------------------------------------------------------------------------"
 
       read -rp "Are you sure you want to UPDATE the above Equipment Details? (y)es or (q)uit: " confirm_update
-      confirm_update=${confirm_update^^}
+      confirm_update=$(echo "$confirm_update" | tr '[:lower:]' '[:upper:]')
       if [[ $confirm_update == "Y" ]]; then
         # Create updated record
         updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
@@ -1159,7 +1159,7 @@ delete_equipment() {
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Delete another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r delete_another
-    delete_another=${delete_another^^}
+    delete_another=$(echo "$delete_another" | tr '[:lower:]' '[:upper:]')
   }
 
   echo ""
@@ -1212,7 +1212,7 @@ delete_equipment() {
     echo "-------------------------------------------------------------------------"
 
     read -rp "Are you sure you want to DELETE the above Equipment Details? (y)es or (q)uit: " confirm_delete
-    confirm_delete=${confirm_delete^^}
+    confirm_delete=$(echo "$confirm_delete" | tr '[:lower:]' '[:upper:]')
     if [[ $confirm_delete == "Y" ]]; then
       sed -i "/^$EquipID:/d" Equipment.txt
       echo "Equipment ID $EquipID deleted."
@@ -1282,7 +1282,7 @@ sort_by_model() {
   while true; do
     printf "${SENJOU_CATEGORY}Would you like to export the report as ASCII text file? ${SENJOU_HIGHLIGHT}(y)es${RESET} or ${SENJOU_HIGHLIGHT}(q)uit${RESET}: "
     read -r choice
-    choice=${choice^^}
+    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
     if [[ "$choice" == "Y" ]]; then
       export_file
       printf "${SENJOU_DATA}Press Enter to continue...${RESET}"
@@ -1361,7 +1361,7 @@ sort_by_status() {
       while true; do
         printf "${MAYOI_CATEGORY}Would you like to export the report as ASCII text file? ${MAYOI_HIGHLIGHT}(y)es${RESET} or ${MAYOI_HIGHLIGHT}(q)uit${RESET}: "
         read -r choice
-        choice=${choice^^}
+        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
         if [[ "$choice" == "Y" ]]; then
           export_file
           printf "${MAYOI_DATA}Press Enter to continue...${RESET}"
@@ -1442,7 +1442,7 @@ sort_by_type() {
       while true; do
         printf "${SHINOBU_CATEGORY}Would you like to export the report as ASCII text file? ${SHINOBU_HIGHLIGHT}(y)es${RESET} or ${SHINOBU_HIGHLIGHT}(q)uit${RESET}: "
         read -r choice
-        choice=${choice^^}
+        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
         if [[ "$choice" == "Y" ]]; then
           export_file
           printf "${SHINOBU_DATA}Press Enter to continue...${RESET}"
@@ -1530,7 +1530,7 @@ main_menu() {
     fi
 
     # Normalize to uppercase first letter only
-    choice=${choice^^}
+    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
     case ${choice:0:1} in
     A) add_equipment ;;
     S) search_equipment ;;
