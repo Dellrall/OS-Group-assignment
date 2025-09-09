@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 
 #===============================================================================
 # TENNA - EQUIPMENT MANAGEMENT SYSTEM
 #===============================================================================
 # Script Name: tenna.sh
 # Authors: Lye Wei Lun, Lim Yung Juin, Swetha
-# Description: A comprehensive command-line equipment management system that 
+# Description: A comprehensive command-line equipment management system that
 #              allows users to add, search, update, delete, and sort equipment
 #              records with a beautiful terminal UI inspired by anime aesthetics.
-# 
+#
 # Features:
 # - Add new equipment with auto-generated IDs
 # - Search equipment by serial number
@@ -249,7 +249,7 @@ select="Please select a choice: "
 #------------------------------------------------------------------------------
 # Function: show_menu
 # Purpose: Displays the main menu interface with centered, styled options
-# Features: 
+# Features:
 # - Beautiful orange title bar
 # - Centered menu with Unicode box drawing
 # - Color-coded options and highlights
@@ -291,7 +291,7 @@ show_menu() {
 #------------------------------------------------------------------------------
 # Function: validate_date
 # Purpose: Validates date input in specified format and checks logical validity
-# Parameters: 
+# Parameters:
 #   $1 - Date input string
 #   $2 - Error message prefix
 #   $3 - Date format (optional, defaults to "MM-DD-YYYY")
@@ -817,7 +817,7 @@ format_character_table() {
 #   $2 - Field name for error message
 #   $3 - Number of lines to clear on error (optional, defaults to 2)
 # Returns: 0 if input is valid, 1 if empty
-# Features: 
+# Features:
 # - Displays user-friendly error messages
 # - Automatically clears error messages after display
 # - Handles cursor positioning for clean UI
@@ -859,7 +859,7 @@ null_check() {
 generate_next_equipment_id() {
   local max_id=0
   local next_id
-  
+
   # Check if Equipment.txt exists and has content
   if [[ -f Equipment.txt ]]; then
     # Find the highest Equipment ID number
@@ -877,9 +877,9 @@ generate_next_equipment_id() {
           max_id=$num
         fi
       fi
-    done < Equipment.txt
+    done <Equipment.txt
   fi
-  
+
   # Generate next ID
   next_id=$((max_id + 1))
   # Format with leading zeros (E0001, E0002, etc.)
@@ -926,7 +926,7 @@ add_equipment() {
       while true; do
         printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}) [Press Enter for auto-generation]: "
         read -r equipment_id
-        
+
         # If user left it empty, auto-generate the next available ID
         if [[ -z "$equipment_id" ]]; then
           equipment_id=$(generate_next_equipment_id)
@@ -934,7 +934,7 @@ add_equipment() {
           sleep 1
           break
         fi
-        
+
         # Validate user-provided Equipment ID
         if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
           print_error "Invalid Equipment ID format. Please use the format: E0001"
@@ -1523,7 +1523,7 @@ delete_equipment() {
 #===============================================================================
 # This section implements three different sorting methods for equipment data:
 # 1. Sort by Model - Uses Senjougahara theme (purple/violet)
-# 2. Sort by Status - Uses Mayoi theme (green/white)  
+# 2. Sort by Status - Uses Mayoi theme (green/white)
 # 3. Sort by Type - Uses Shinobu theme (golden/cream)
 #
 # Each function includes:
@@ -1556,17 +1556,17 @@ sort_by_model() {
     printf "Enter your choice (1 or 2): "
     read -r choice
     echo ""
-    
+
     case $choice in
-      1)
-        add_equipment
-        return
-        ;;
-      2|*)
-        echo "Returning to main menu..."
-        sleep 1
-        return
-        ;;
+    1)
+      add_equipment
+      return
+      ;;
+    2 | *)
+      echo "Returning to main menu..."
+      sleep 1
+      return
+      ;;
     esac
   fi
 
@@ -1647,17 +1647,17 @@ sort_by_status() {
     printf "Enter your choice (1 or 2): "
     read -r choice
     echo ""
-    
+
     case $choice in
-      1)
-        add_equipment
-        return
-        ;;
-      2|*)
-        echo "Returning to main menu..."
-        sleep 1
-        return
-        ;;
+    1)
+      add_equipment
+      return
+      ;;
+    2 | *)
+      echo "Returning to main menu..."
+      sleep 1
+      return
+      ;;
     esac
   fi
 
@@ -1760,17 +1760,17 @@ sort_by_type() {
     printf "Enter your choice (1 or 2): "
     read -r choice
     echo ""
-    
+
     case $choice in
-      1)
-        add_equipment
-        return
-        ;;
-      2|*)
-        echo "Returning to main menu..."
-        sleep 1
-        return
-        ;;
+    1)
+      add_equipment
+      return
+      ;;
+    2 | *)
+      echo "Returning to main menu..."
+      sleep 1
+      return
+      ;;
     esac
   fi
 
@@ -1921,7 +1921,7 @@ show_undertale_thanks() {
 # - Professional error handling for invalid options
 # - Graceful exit with thank you screen
 # - Clean screen management between operations
-# 
+#
 # Menu Options:
 # A - Add Equipment (with auto-ID generation)
 # S - Search Equipment (by serial number)
@@ -1988,9 +1988,9 @@ exit 0
 #===============================================================================
 # END OF TENNA EQUIPMENT MANAGEMENT SYSTEM
 #===============================================================================
-# 
+#
 # Script Summary:
-# - Total Functions: 20+ 
+# - Total Functions: 20+
 # - Lines of Code: 1900+
 # - Features: Add, Search, Update, Delete, Sort equipment with validation
 # - Themes: Multiple anime-inspired color schemes
