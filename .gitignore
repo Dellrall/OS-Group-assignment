@@ -29,6 +29,9 @@ test_*.sh
 *_test.sh
 effectiveness_report.sh
 
+# Test folder
+test/
+
 # Assignment text files
 assignment_text.txt
 *assignment*.txt
