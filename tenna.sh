@@ -930,7 +930,7 @@ add_equipment() {
         # If user left it empty, auto-generate the next available ID
         if [[ -z "$equipment_id" ]]; then
           equipment_id=$(generate_next_equipment_id)
-          echo "Auto-generated Equipment ID: ${CYAN_HIGHLIGHT}$equipment_id${RESET}"
+          printf "Auto-generated Equipment ID: ${CYAN_HIGHLIGHT}%s${RESET}\n" "$equipment_id"
           sleep 1
           break
         fi
@@ -2001,6 +2001,6 @@ exit 0
 #
 # Created by: Lye Wei Lun, Lim Yung Juin, Swetha
 # Course: Operating Systems Group Assignment
-# Institution: [University Name]
+# Institution: TARUMT
 # Academic Year: 2025
 #===============================================================================
