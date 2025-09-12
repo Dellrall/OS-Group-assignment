@@ -1,37 +1,8 @@
-#!/opt/homebrew/bin/bash
+#!/bin/bash
 
-#===============================================================================
-# TENNA - EQUIPMENT MANAGEMENT SYSTEM
-#===============================================================================
-# Script Name: tenna.sh
-# Authors: Lye Wei Lun, Lim Yung Juin, Swetha
-# Description: A comprehensive command-line equipment management system that
-#              allows users to add, search, update, delete, and sort equipment
-#              records with a beautiful terminal UI inspired by anime aesthetics.
-#
-# Features:
-# - Add new equipment with auto-generated IDs
-# - Search equipment by serial number
-# - Update existing equipment details
-# - Delete equipment records
-# - Sort and display equipment by model, status, or type
-# - Export reports to text files
-# - Input validation and error handling
-# - Colorful terminal interface with multiple themes
-#
-# Data Format: Equipment.txt stores data in CSV format with fields:
-# ID:Type:Model:Serial:Status:PurchaseDate:WarrantyDate
-#===============================================================================
+# tenna.sh made by Lye Wei Lun, Lim Yung Juin, Swetha
 
-#===============================================================================
-# COLOR CONFIGURATION SECTION
-#===============================================================================
-# This section defines all color codes and themes used throughout the application.
-# The color scheme is inspired by Monogatari anime series characters.
-
-#------------------------------------------------------------------------------
-# BASE COLOR PALETTE - Ononoki Yotsugi inspired
-#------------------------------------------------------------------------------
+# Ononoki Yotsugi inspired color palette
 ORANGE_BG="\033[48;5;208m" # Orange background (title bars)
 WHITE_TEXT="\033[97m"      # White text
 BLACK_TEXT="\033[30m"      # Black text
@@ -43,41 +14,26 @@ RED_ERROR="\033[91m"       # Red for errors
 GREEN_SUCCESS="\033[92m"   # Green for success
 RESET="\033[0m"            # Reset all formatting
 
-#------------------------------------------------------------------------------
-# CHARACTER-SPECIFIC COLOR THEMES
-#------------------------------------------------------------------------------
-
+# Monogatari Character Color Palettes
 # Senjougahara Hitagi - Purple/Violet theme (elegant, sophisticated)
-# Used for: Sort by Model functionality
 SENJOU_HEADER="\033[48;5;98m" # Deep purple background
 SENJOU_CATEGORY="\033[95m"    # Bright magenta for categories
 SENJOU_HIGHLIGHT="\033[35m"   # Purple for highlighted data
 SENJOU_DATA="\033[38;5;183m"  # Soft lavender for regular data
 
 # Hachikuji Mayoi - White/Black/Green theme (school uniform colors)
-# Used for: Sort by Status functionality
 MAYOI_HEADER="\033[48;5;22m" # Dark green background
 MAYOI_CATEGORY="\033[97m"    # Bright white for categories
 MAYOI_HIGHLIGHT="\033[92m"   # Bright green for highlighted data
 MAYOI_DATA="\033[37m"        # Light gray for regular data
 
 # Shinobu Oshino (Monogatari) - Golden blonde/elegant cream theme
-# Used for: Sort by Type functionality
 SHINOBU_HEADER="\033[48;5;220m"    # Golden yellow background
 SHINOBU_CATEGORY="\033[38;5;136m"  # Dark golden brown for categories
 SHINOBU_HIGHLIGHT="\033[38;5;178m" # Bright gold for highlighted data
 SHINOBU_DATA="\033[38;5;230m"      # Cream/ivory for regular data
 
-#===============================================================================
-# DISPLAY UTILITY FUNCTIONS
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: print_title_bar
-# Purpose: Creates a full-width orange title bar with centered text
-# Parameters: $1 - The title text to display
-# Usage: print_title_bar "Equipment Management System"
-#------------------------------------------------------------------------------
+# Color Functions
 print_title_bar() {
   local title="$1"
   local term_width=$(tput cols 2>/dev/null || echo "80")
@@ -98,17 +54,7 @@ print_title_bar() {
   printf "${RESET}\n"
 }
 
-#------------------------------------------------------------------------------
-# CHARACTER-SPECIFIC TITLE BAR FUNCTIONS
-# These functions create themed title bars for different sections of the app
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-# Function: print_senjou_title_bar
-# Purpose: Creates a purple-themed title bar (Senjougahara Hitagi theme)
-# Used for: Sort by Model functionality
-# Parameters: $1 - The title text to display
-#------------------------------------------------------------------------------
+# Character-specific title bar functions
 print_senjou_title_bar() {
   local title="$1"
   local term_width=$(tput cols 2>/dev/null || echo "80")
@@ -124,12 +70,6 @@ print_senjou_title_bar() {
   printf "${RESET}\n"
 }
 
-#------------------------------------------------------------------------------
-# Function: print_mayoi_title_bar
-# Purpose: Creates a green-themed title bar (Hachikuji Mayoi theme)
-# Used for: Sort by Status functionality
-# Parameters: $1 - The title text to display
-#------------------------------------------------------------------------------
 print_mayoi_title_bar() {
   local title="$1"
   local term_width=$(tput cols 2>/dev/null || echo "80")
@@ -145,12 +85,6 @@ print_mayoi_title_bar() {
   printf "${RESET}\n"
 }
 
-#------------------------------------------------------------------------------
-# Function: print_shinobu_title_bar
-# Purpose: Creates a golden-themed title bar (Shinobu Oshino theme)
-# Used for: Sort by Type functionality
-# Parameters: $1 - The title text to display
-#------------------------------------------------------------------------------
 print_shinobu_title_bar() {
   local title="$1"
   local term_width=$(tput cols 2>/dev/null || echo "80")
@@ -166,43 +100,22 @@ print_shinobu_title_bar() {
   printf "${RESET}\n"
 }
 
-#------------------------------------------------------------------------------
-# Function: print_colored
-# Purpose: Prints text with specified color formatting
-# Parameters: $1 - Color code, $2 - Text to print
-#------------------------------------------------------------------------------
 print_colored() {
   local color="$1"
   local text="$2"
   printf "${color}%s${RESET}" "$text"
 }
 
-#------------------------------------------------------------------------------
-# Function: print_success
-# Purpose: Displays success messages in green color with checkmark
-# Parameters: $1 - Success message to display
-#------------------------------------------------------------------------------
 print_success() {
   local text="$1"
   printf "${GREEN_SUCCESS}✓ %s${RESET}\n" "$text"
 }
 
-#------------------------------------------------------------------------------
-# Function: print_error
-# Purpose: Displays error messages in red color with X mark
-# Parameters: $1 - Error message to display
-#------------------------------------------------------------------------------
 print_error() {
   local text="$1"
   printf "${RED_ERROR}✗ %s${RESET}\n" "$text"
 }
 
-#------------------------------------------------------------------------------
-# Function: center_text
-# Purpose: Centers text horizontally in the terminal
-# Parameters: $1 - Text to center, $2 - Optional color (defaults to LIGHT_GRAY)
-# Note: Properly handles ANSI escape sequences for accurate centering
-#------------------------------------------------------------------------------
 center_text() {
   local text="$1"
   local color="${2:-$LIGHT_GRAY}"
@@ -218,23 +131,14 @@ center_text() {
   echo -e "${color}${text}${RESET}"
 }
 
-#===============================================================================
-# TERMINAL SETUP AND CONFIGURATION
-#===============================================================================
-
-# Enable alternate screen buffer to preserve user's terminal content
+# Enable alternate screen buffer
 tput smcup             # Save current terminal content and switch to alternate buffer
 trap 'tput rmcup' EXIT # Restore original terminal content on exit
 
-#===============================================================================
-# TASK 1: MAIN MENU IMPLEMENTATION
-#===============================================================================
-# This section implements the main menu interface and navigation system
+# =======================================Task 1========================================
+# Task 1: Implement Main menu and page selection
 
-#------------------------------------------------------------------------------
-# MENU OPTION DEFINITIONS
-# These variables define the menu options displayed to the user
-#------------------------------------------------------------------------------
+# Variables
 title="Equipment Maintenance Menu"
 a="A - Add New Computer Lab Equipment Details"
 s="S - Search Equipment by Serial Number"
@@ -246,21 +150,13 @@ p="P - Sort equipment by Type"
 q="Q - Exit from Program"
 select="Please select a choice: "
 
-#------------------------------------------------------------------------------
-# Function: show_menu
-# Purpose: Displays the main menu interface with centered, styled options
-# Features:
-# - Beautiful orange title bar
-# - Centered menu with Unicode box drawing
-# - Color-coded options and highlights
-# - Responsive to terminal width
-#------------------------------------------------------------------------------
+# Print the menu
 show_menu() {
   clear
   echo ""
 
   # Beautiful orange title bar with white text
-  print_title_bar "Tenna - Equipment Management System"
+  print_title_bar "Equipment Management System"
   echo ""
   echo ""
 
@@ -282,27 +178,11 @@ show_menu() {
   printf "${CYAN_HIGHLIGHT}Please select a choice: ${RESET}"
 }
 
-#===============================================================================
-# TASK 2: ADD EQUIPMENT FUNCTIONALITY
-#===============================================================================
-# This section implements the equipment addition feature with comprehensive
-# input validation and data management
+#========================================Task 2========================================
+# Task 2: Implement Add Equipment function
 
-#------------------------------------------------------------------------------
-# Function: validate_date
-# Purpose: Validates date input in specified format and checks logical validity
-# Parameters:
-#   $1 - Date input string
-#   $2 - Error message prefix
-#   $3 - Date format (optional, defaults to "MM-DD-YYYY")
-# Returns: 0 if valid, 1 if invalid
-# Supports: MM-DD-YYYY and YYYY-MM-DD formats
-# Features:
-# - Format validation using regex
-# - Month range validation (1-12)
-# - Day range validation based on month
-# - Leap year calculation for February
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+#Validate date format function
 validate_date() {
   local date_input=$1
   local error_msg=$2
@@ -379,16 +259,8 @@ validate_date() {
   return 0
 }
 
-#------------------------------------------------------------------------------
-# Function: convert_date_format
-# Purpose: Converts dates between MM-DD-YYYY and YYYY-MM-DD formats
-# Parameters:
-#   $1 - Input date string
-#   $2 - Source format ("MM-DD-YYYY" or "YYYY-MM-DD")
-#   $3 - Target format ("MM-DD-YYYY" or "YYYY-MM-DD")
-# Returns: Converted date string
-# Usage: convert_date_format "12-25-2023" "MM-DD-YYYY" "YYYY-MM-DD"
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Date conversion function
 convert_date_format() {
   local date_input=$1
   local from_format=$2
@@ -410,16 +282,8 @@ convert_date_format() {
   esac
 }
 
-#===============================================================================
-# TABLE FORMATTING AND DISPLAY UTILITIES
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: center_table_line
-# Purpose: Centers a table line horizontally in the terminal
-# Parameters: $1 - Line of text to center
-# Features: Auto-detects terminal width, handles edge cases
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Function to center a table line
 center_table_line() {
   local line="$1"
   local term_width=$(tput cols 2>/dev/null || echo 120)
@@ -435,19 +299,8 @@ center_table_line() {
   printf "%*s%s\n" "$padding" "" "$line"
 }
 
-#------------------------------------------------------------------------------
-# Function: format_equipment_table
-# Purpose: Creates a responsive, formatted table for equipment data display
-# Parameters: Array of equipment data rows (colon-separated values)
-# Global Variables Used:
-#   - INCLUDE_PURCHASE_DATE: Boolean flag to include/exclude purchase date column
-# Features:
-# - Responsive column width calculation based on terminal size
-# - Dynamic header generation based on purchase date inclusion
-# - Automatic column width adjustment for terminal fit
-# - Professional table formatting with borders and alignment
-# - Date format conversion for display
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Responsive Table Formatting Function
 format_equipment_table() {
   local -a data_rows=("$@")
   local include_purchase_date=${INCLUDE_PURCHASE_DATE:-false}
@@ -804,24 +657,8 @@ format_character_table() {
     printf "${RESET}\n"
   done
 }
-
-#===============================================================================
-# INPUT VALIDATION UTILITIES
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: null_check
-# Purpose: Validates that user input is not empty or null
-# Parameters:
-#   $1 - Input value to check
-#   $2 - Field name for error message
-#   $3 - Number of lines to clear on error (optional, defaults to 2)
-# Returns: 0 if input is valid, 1 if empty
-# Features:
-# - Displays user-friendly error messages
-# - Automatically clears error messages after display
-# - Handles cursor positioning for clean UI
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Null check function
 null_check() {
   local input_value="$1"
   local field_name="$2"
@@ -837,82 +674,15 @@ null_check() {
   return 0
 }
 
-#===============================================================================
-# EQUIPMENT ID MANAGEMENT
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: generate_next_equipment_id
-# Purpose: Automatically generates the next available Equipment ID
-# Features:
-# - Scans existing Equipment.txt for highest ID number
-# - Handles missing or empty files gracefully
-# - Maintains E#### format (e.g., E0001, E0002)
-# - Supports up to E9999 equipment items
-# - Properly handles leading zeros in ID format
-# Algorithm:
-# 1. Parse all existing Equipment IDs from Equipment.txt
-# 2. Extract numeric portions and find maximum
-# 3. Add 1 to maximum and format with leading zeros
-# 4. Return formatted Equipment ID (E0001, E0002, etc.)
-#------------------------------------------------------------------------------
-generate_next_equipment_id() {
-  local max_id=0
-  local next_id
-
-  # Check if Equipment.txt exists and has content
-  if [[ -f Equipment.txt ]]; then
-    # Find the highest Equipment ID number
-    while IFS=':' read -r id rest; do
-      # Skip header line
-      if [[ "$id" == "ID" ]]; then
-        continue
-      fi
-      # Extract numeric part from Equipment ID (e.g., E0001 -> 1)
-      if [[ "$id" =~ ^E([0-9]{4})$ ]]; then
-        local num=${BASH_REMATCH[1]}
-        # Remove leading zeros for comparison
-        num=$((10#$num))
-        if ((num > max_id)); then
-          max_id=$num
-        fi
-      fi
-    done <Equipment.txt
-  fi
-
-  # Generate next ID
-  next_id=$((max_id + 1))
-  # Format with leading zeros (E0001, E0002, etc.)
-  printf "E%04d" "$next_id"
-}
-
-#===============================================================================
-# TASK 2: ADD EQUIPMENT FUNCTION IMPLEMENTATION
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: add_equipment
-# Purpose: Interactive equipment addition with comprehensive input validation
-# Features:
-# - Auto-generated Equipment IDs (user can press Enter for auto-generation)
-# - Comprehensive input validation for all fields
-# - Equipment type validation (keyboard/mouse/monitor/webcam/mousepad/laptop)
-# - Serial number format validation (AB123456789)
-# - Status validation (Available/Unavailable)
-# - Date validation with logical checks
-# - Warranty date must be at least 30 days after purchase date
-# - Duplicate ID and serial number prevention
-# - File creation and header management
-# - Loop for adding multiple equipment items
-# - Professional error handling with cursor management
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Add Equipment
 add_equipment() {
   clear
   choice="Y"
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Add another new Equipment details? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r choice
-    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+    choice=${choice^^}
   }
   while true; do
     if [[ $choice == "Y" ]]; then
@@ -922,32 +692,46 @@ add_equipment() {
       echo ""
       echo ""
 
-      # Input Equipment ID
+      # Input Equipment ID - now supports auto-generation
       while true; do
-        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}) [Press Enter for auto-generation]: "
+        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}, leave empty for auto-assignment): "
         read -r equipment_id
-
-        # If user left it empty, auto-generate the next available ID
+        
+        # If empty, auto-generate next ID
         if [[ -z "$equipment_id" ]]; then
-          equipment_id=$(generate_next_equipment_id)
-          echo "Auto-generated Equipment ID: ${CYAN_HIGHLIGHT}$equipment_id${RESET}"
-          sleep 1
+          if [[ -f Equipment.txt ]]; then
+            # Find the largest existing ID number
+            largest_num=$(grep -o '^E[0-9]\{4\}:' Equipment.txt | sed 's/E0*\([0-9]\+\):/\1/' | sort -n | tail -1)
+            if [[ -n "$largest_num" ]]; then
+              next_num=$((largest_num + 1))
+            else
+              next_num=1
+            fi
+          else
+            next_num=1
+          fi
+          
+          # Format as E0001, E0002, etc.
+          equipment_id=$(printf "E%04d" "$next_num")
+          printf "${GREEN_SUCCESS}Auto-assigned Equipment ID: ${equipment_id}${RESET}\n"
           break
         fi
-
-        # Validate user-provided Equipment ID
-        if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
-          print_error "Invalid Equipment ID format. Please use the format: E0001"
-          sleep 2
-          tput cuu 3
-          tput ed
-        elif [[ -f Equipment.txt && -n $(grep "^$equipment_id:" Equipment.txt) ]]; then
-          print_error "Equipment ID already exists. Please enter a unique ID."
-          sleep 2
-          tput cuu 2
-          tput ed
-        else
-          break
+        
+        # Manual input validation (for non-empty input)
+        if null_check "$equipment_id" "Equipment ID"; then
+          if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
+            print_error "Invalid Equipment ID format. Please use the format: E0001"
+            sleep 2
+            tput cuu 3
+            tput ed
+          elif [[ -f Equipment.txt && -n $(grep "^$equipment_id:" Equipment.txt) ]]; then
+            print_error "Equipment ID already exists. Please enter a unique ID."
+            sleep 2
+            tput cuu 2
+            tput ed
+          else
+            break
+          fi
         fi
       done
 
@@ -975,15 +759,16 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Serial Number: " equipment_serial
+        printf "${CYAN_HIGHLIGHT}Serial Number${RESET} (format ${SOFT_YELLOW}AB123456789${RESET}): "
+        read -r equipment_serial
         if null_check "$equipment_serial" "Equipment Serial Number"; then
           if [[ ! "$equipment_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
-            echo "Invalid Serial Number format. Please use the format: AB123456789"
+            print_error "Invalid Serial Number format. Please use the format: AB123456789"
             sleep 2
             tput cuu 2
             tput ed
           elif [[ -f Equipment.txt && -n $(grep ":$equipment_serial:" Equipment.txt) ]]; then
-            echo "Serial Number already exists. Please enter a unique Serial Number."
+            print_error "Serial Number already exists. Please enter a unique Serial Number."
             sleep 2
             tput cuu 2
             tput ed
@@ -994,10 +779,11 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Status (Available/Unavailable): " equipment_status
+        printf "${CYAN_HIGHLIGHT}Status${RESET} (${SOFT_YELLOW}Available${RESET}/${SOFT_YELLOW}Unavailable${RESET}): "
+        read -r equipment_status
         if null_check "$equipment_status" "Equipment Status"; then
           if [[ ! "$equipment_status" == "Available" && ! "$equipment_status" == "Unavailable" ]]; then
-            echo "Invalid status. Please enter Available or Unavailable."
+            print_error "Invalid status. Please enter Available or Unavailable."
             sleep 2
             tput cuu 2
             tput ed
@@ -1010,14 +796,15 @@ add_equipment() {
       while true; do
         # Get current date in MM-DD-YYYY format
         current_date=$(date +"%m-%d-%Y")
-        read -rp "Purchase Date (MM-DD-YYYY) [${current_date}]: " equipment_purchase_date
+        printf "${CYAN_HIGHLIGHT}Purchase Date${RESET} (${SOFT_YELLOW}MM-DD-YYYY${RESET}) [${SOFT_YELLOW}${current_date}${RESET}]: "
+        read -r equipment_purchase_date
         if [[ -z "$equipment_purchase_date" ]]; then
           equipment_purchase_date="$current_date"
           break
         fi
 
         if ! validate_date "$equipment_purchase_date" "Invalid purchase date."; then
-          echo "Invalid date format. Please use MM-DD-YYYY."
+          print_error "Invalid date format. Please use MM-DD-YYYY."
           sleep 2
           tput cuu 2
           tput ed
@@ -1027,7 +814,8 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Warranty Date (MM-DD-YYYY): " equipment_expiry_date
+        printf "${CYAN_HIGHLIGHT}Warranty Date${RESET} (${SOFT_YELLOW}MM-DD-YYYY${RESET}): "
+        read -r equipment_expiry_date
 
         # First validate the date format
         if ! validate_date "$equipment_expiry_date" "Invalid warranty date."; then
@@ -1043,7 +831,7 @@ add_equipment() {
         # Convert dates to seconds since epoch for comparison
         if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) ||
           ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
-          echo "Error processing dates."
+          print_error "Error processing dates."
           sleep 2
           tput cuu 2
           tput ed
@@ -1055,7 +843,7 @@ add_equipment() {
 
         # Check if warranty date is at least 30 days after purchase date
         if ((difference_days < 30)); then
-          echo "Warranty date must be at least 30 days after purchase date."
+          print_error "Warranty date must be at least 30 days after purchase date."
           sleep 2
           tput cuu 2
           tput ed
@@ -1096,30 +884,16 @@ add_equipment() {
     fi
   done
 }
+#========================================Task 3========================================
+# Task 3: Implement Search Equipment function
 
-#===============================================================================
-# TASK 3: SEARCH EQUIPMENT FUNCTIONALITY
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: search_equipment
-# Purpose: Search for equipment by serial number and display detailed information
-# Features:
-# - Serial number format validation (AB123456789)
-# - Equipment.txt existence check
-# - Detailed equipment information display
-# - Date format conversion for user-friendly display
-# - Loop functionality for multiple searches
-# - Professional error handling and user feedback
-# Search Method: Uses grep to find equipment by serial number
-# Display Format: Formatted equipment details with proper labels
-#------------------------------------------------------------------------------
+# Search Equipment
 search_equipment() {
   search_another="Y"
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Search another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r search_another
-    search_another=$(echo "$search_another" | tr '[:lower:]' '[:upper:]')
+    search_another=${search_another^^}
   }
 
   clear
@@ -1187,32 +961,17 @@ search_equipment() {
   done
 }
 
-#===============================================================================
-# TASK 4: UPDATE EQUIPMENT FUNCTIONALITY
-#===============================================================================
+#========================================Task 4========================================
+# Task 4: Implement Update Equipment function
 
-#------------------------------------------------------------------------------
-# Function: update_equipment
-# Purpose: Update existing equipment details with comprehensive validation
-# Features:
-# - Equipment ID validation and existence checking
-# - Current equipment details display before update
-# - Field-by-field update with validation
-# - Serial number uniqueness checking (prevents duplicates)
-# - Equipment type validation
-# - Status validation
-# - Date validation with logical business rules
-# - File update using sed for precise record replacement
-# - Loop functionality for multiple updates
-# - Professional error handling and user feedback
-#------------------------------------------------------------------------------
+# Update Equipment
 update_equipment() {
   clear
   update_another="Y"
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Update another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r update_another
-    update_another=$(echo "$update_another" | tr '[:lower:]' '[:upper:]')
+    update_another=${update_another^^}
   }
 
   echo ""
@@ -1228,18 +987,19 @@ update_equipment() {
       break
     fi
 
-    read -rp "Enter Equipment ID: " EquipID
+    printf "${CYAN_HIGHLIGHT}Enter Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+    read -r EquipID
     echo "-------------------------------------------------------------------------"
     # Check if equipment exists
     if null_check "$EquipID" "Equipment ID"; then
       if [[ ! "$EquipID" =~ ^[E][0-9]{4}$ ]]; then
-        echo "Invalid Equipment ID format. Please use the format: E0001"
+        print_error "Invalid Equipment ID format. Please use the format: E0001"
         sleep 2
         tput cuu 3
         tput ed
         continue
       elif ! grep -q "^${EquipID}:" Equipment.txt; then
-        echo "No equipment found with ID: $EquipID"
+        print_error "No equipment found with ID: $EquipID"
         sleep 2
         tput cuu 3
         tput ed
@@ -1267,16 +1027,17 @@ update_equipment() {
 
       # Prompt for new values
       while true; do
-        read -rp "New Serial Number (leave empty to keep current): " new_serial
+        printf "${CYAN_HIGHLIGHT}New Serial Number${RESET} (format ${SOFT_YELLOW}AB123456789${RESET}, leave empty to keep current): "
+        read -r new_serial
         if [[ -n $new_serial ]]; then
           if [[ ! "$new_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
-            echo "Invalid Serial Number format. Keeping current value."
+            print_error "Invalid Serial Number format. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
             new_serial=""
           elif grep -q ":$new_serial:" Equipment.txt && ! grep -q "^${EquipID}:.*:$new_serial:" Equipment.txt; then
-            echo "Duplicate Serial in another record. Ignoring."
+            print_error "Duplicate Serial in another record. Ignoring."
             new_serial=""
           fi
         fi
@@ -1284,10 +1045,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Type (leave empty to keep current): " new_type
+        printf "${CYAN_HIGHLIGHT}New Type${RESET} (${SOFT_YELLOW}keyboard${RESET}/${SOFT_YELLOW}mouse${RESET}/${SOFT_YELLOW}monitor${RESET}/${SOFT_YELLOW}webcam${RESET}/${SOFT_YELLOW}mousepad${RESET}/${SOFT_YELLOW}laptop${RESET}, leave empty to keep current): "
+        read -r new_type
         if [[ -n $new_type ]]; then
           if [[ ! "$new_type" == "keyboard" && ! "$new_type" == "mouse" && ! "$new_type" == "monitor" && ! "$new_type" == "webcam" && ! "$new_type" == "mousepad" && ! "$new_type" == "laptop" ]]; then
-            echo "Invalid equipment type. Keeping current value."
+            print_error "Invalid equipment type. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1298,10 +1060,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Model (leave empty to keep current): " new_model
+        printf "${CYAN_HIGHLIGHT}New Model${RESET} (leave empty to keep current): "
+        read -r new_model
         if [[ -n $new_model ]]; then
           if [[ ! "$new_model" =~ ^[A-Za-z0-9\ ]+$ ]]; then
-            echo "Invalid Model format. Keeping current value."
+            print_error "Invalid Model format. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1312,10 +1075,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Status (Available/Unavailable, leave empty to keep current): " new_status
+        printf "${CYAN_HIGHLIGHT}New Status${RESET} (${SOFT_YELLOW}Available${RESET}/${SOFT_YELLOW}Unavailable${RESET}, leave empty to keep current): "
+        read -r new_status
         if [[ -n $new_status ]]; then
           if [[ ! "$new_status" == "Available" && ! "$new_status" == "Unavailable" ]]; then
-            echo "Invalid status. Keeping current value."
+            print_error "Invalid status. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1327,25 +1091,27 @@ update_equipment() {
 
       # Purchase Date with format validation
       while true; do
-        read -rp "New Purchase Date (YYYY-MM-DD, leave empty to keep current): " new_purchase_date
+        printf "${CYAN_HIGHLIGHT}New Purchase Date${RESET} (${SOFT_YELLOW}YYYY-MM-DD${RESET}, leave empty to keep current): "
+        read -r new_purchase_date
         if [[ -z "$new_purchase_date" ]]; then
           break
         fi
         if validate_date "$new_purchase_date" "Invalid purchase date." "YYYY-MM-DD"; then
           break
         else
-          echo "Please try again or leave empty to keep current date."
+          print_error "Please try again or leave empty to keep current date."
         fi
       done
 
       # Warranty Date with format validation
       while true; do
-        read -rp "New Warranty Date (YYYY-MM-DD, leave empty to keep current): " new_expiry_date
+        printf "${CYAN_HIGHLIGHT}New Warranty Date${RESET} (${SOFT_YELLOW}YYYY-MM-DD${RESET}, leave empty to keep current): "
+        read -r new_expiry_date
         if [[ -z "$new_expiry_date" ]]; then
           break
         fi
         if ! validate_date "$new_expiry_date" "Invalid warranty date." "YYYY-MM-DD"; then
-          echo "Please try again or leave empty to keep current date."
+          print_error "Please try again or leave empty to keep current date."
           continue
         fi
 
@@ -1356,13 +1122,13 @@ update_equipment() {
 
         if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) ||
           ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
-          echo "Error processing dates. Please try again."
+          print_error "Error processing dates. Please try again."
           continue
         fi
 
         difference_days=$(((warranty_date_seconds - purchase_date_seconds) / 86400))
         if ((difference_days < 30)); then
-          echo "Warranty date must be at least 30 days after purchase date."
+          print_error "Warranty date must be at least 30 days after purchase date."
           continue
         fi
         break
@@ -1389,7 +1155,7 @@ update_equipment() {
       echo "-------------------------------------------------------------------------"
 
       read -rp "Are you sure you want to UPDATE the above Equipment Details? (y)es or (q)uit: " confirm_update
-      confirm_update=$(echo "$confirm_update" | tr '[:lower:]' '[:upper:]')
+      confirm_update=${confirm_update^^}
       if [[ $confirm_update == "Y" ]]; then
         # Create updated record
         updated_record="$eq_id:$eq_type:$eq_model:$eq_serial:$eq_status:$eq_purchase_date:$eq_expiry_date"
@@ -1416,33 +1182,17 @@ update_equipment() {
   done
 }
 
-#===============================================================================
-# TASK 5: DELETE EQUIPMENT FUNCTIONALITY
-#===============================================================================
+#========================================Task 5========================================
+# Task 5: Implement Delete Equipment function
 
-#------------------------------------------------------------------------------
-# Function: delete_equipment
-# Purpose: Delete equipment records with confirmation and safety checks
-# Features:
-# - Equipment ID validation and existence checking
-# - Complete equipment details display before deletion
-# - Confirmation prompt to prevent accidental deletions
-# - Equipment.txt existence checking
-# - Safe record deletion using sed command
-# - Loop functionality for multiple deletions
-# - Professional error handling and user feedback
-# Safety Features:
-# - Shows complete equipment details before deletion
-# - Requires explicit user confirmation (y/q)
-# - Validates Equipment ID format before processing
-#------------------------------------------------------------------------------
+# Delete Equipment
 delete_equipment() {
   clear
   delete_another="Y"
   confirmation() {
     printf "${CYAN_HIGHLIGHT}Delete another Equipment? ${SOFT_YELLOW}(y)es${RESET} or ${SOFT_YELLOW}(q)uit${RESET}: "
     read -r delete_another
-    delete_another=$(echo "$delete_another" | tr '[:lower:]' '[:upper:]')
+    delete_another=${delete_another^^}
   }
 
   echo ""
@@ -1458,16 +1208,17 @@ delete_equipment() {
       break
     fi
 
-    read -rp "Enter Equipment ID to delete: " EquipID
+    printf "${CYAN_HIGHLIGHT}Enter Equipment ID to delete${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+    read -r EquipID
     echo "-------------------------------------------------------------------------"
     if ! [[ $EquipID =~ ^E[0-9]{4}$ ]]; then
-      echo "Invalid Equipment ID format. Please use the format: E0001"
+      print_error "Invalid Equipment ID format. Please use the format: E0001"
       sleep 2
       tput cuu 4
       tput ed
       continue
     elif ! grep -q "^$EquipID:" Equipment.txt; then
-      echo "No equipment found with ID: $EquipID"
+      print_error "No equipment found with ID: $EquipID"
       sleep 2
       tput cuu 2
       tput ed
@@ -1495,7 +1246,7 @@ delete_equipment() {
     echo "-------------------------------------------------------------------------"
 
     read -rp "Are you sure you want to DELETE the above Equipment Details? (y)es or (q)uit: " confirm_delete
-    confirm_delete=$(echo "$confirm_delete" | tr '[:lower:]' '[:upper:]')
+    confirm_delete=${confirm_delete^^}
     if [[ $confirm_delete == "Y" ]]; then
       sed -i "/^$EquipID:/d" Equipment.txt
       echo "Equipment ID $EquipID deleted."
@@ -1518,58 +1269,14 @@ delete_equipment() {
   done
 }
 
-#===============================================================================
-# TASK 6: EQUIPMENT SORTING AND REPORTING FUNCTIONALITY
-#===============================================================================
-# This section implements three different sorting methods for equipment data:
-# 1. Sort by Model - Uses Senjougahara theme (purple/violet)
-# 2. Sort by Status - Uses Mayoi theme (green/white)
-# 3. Sort by Type - Uses Shinobu theme (golden/cream)
-#
-# Each function includes:
-# - Equipment.txt existence validation before entering
-# - User-friendly error handling with menu options
-# - Professional table formatting with character themes
-# - Export functionality to ASCII text files
-# - Responsive terminal width handling
+#========================================Task 6========================================
 
-#------------------------------------------------------------------------------
-# Function: sort_by_model
-# Purpose: Sort and display equipment by model in alphabetical order
-# Theme: Senjougahara Hitagi (purple/violet colors)
-# Features:
-# - Pre-validation of Equipment.txt existence
-# - Interactive menu for missing file handling
-# - Alphabetical sorting by model name (case-insensitive)
-# - Professional table display with highlighting
-# - Export to "Report_By_Model.txt" option
-# - Senjougahara character theme colors
-#------------------------------------------------------------------------------
+# Sort and display Equipment.txt by a named field, printing each record Horizontally
+
+#--------------------------------------------------------------------------------------
+
+# Sort by Model
 sort_by_model() {
-  # Check if Equipment.txt exists before entering the function
-  if [[ ! -f Equipment.txt ]]; then
-    echo ""
-    print_error "Equipment file not found. No equipment has been registered yet."
-    echo "Would you like to:"
-    echo "1. Add equipment first"
-    echo "2. Return to main menu"
-    printf "Enter your choice (1 or 2): "
-    read -r choice
-    echo ""
-
-    case $choice in
-    1)
-      add_equipment
-      return
-      ;;
-    2 | *)
-      echo "Returning to main menu..."
-      sleep 1
-      return
-      ;;
-    esac
-  fi
-
   export_file() {
     out_file="Report_By_Model.txt"
     {
@@ -1584,6 +1291,12 @@ sort_by_model() {
   print_senjou_title_bar "Equipment Details Sorted By Model"
   echo ""
   echo ""
+
+  if [[ ! -f Equipment.txt ]]; then
+    print_error "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
 
   # Get all rows (skip header if present), sort by Model (col 3)
   mapfile -t rows < <(
@@ -1603,7 +1316,7 @@ sort_by_model() {
   while true; do
     printf "${SENJOU_CATEGORY}Would you like to export the report as ASCII text file? ${SENJOU_HIGHLIGHT}(y)es${RESET} or ${SENJOU_HIGHLIGHT}(q)uit${RESET}: "
     read -r choice
-    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+    choice=${choice^^}
     if [[ "$choice" == "Y" ]]; then
       export_file
       printf "${SENJOU_DATA}Press Enter to continue...${RESET}"
@@ -1622,45 +1335,9 @@ sort_by_model() {
   done
 }
 
-#------------------------------------------------------------------------------
-# Function: sort_by_status
-# Purpose: Sort and display equipment by status (Available/Unavailable)
-# Theme: Hachikuji Mayoi (green/white colors)
-# Features:
-# - Pre-validation of Equipment.txt existence
-# - Interactive menu for missing file handling
-# - User input for status selection (Available/Unavailable)
-# - Case-insensitive status matching
-# - Sorting by model within status groups
-# - Professional table display with status highlighting
-# - Export to "Report_By_Status_[Status].txt" option
-# - Mayoi character theme colors with purchase date inclusion
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Sort by Status
 sort_by_status() {
-  # Check if Equipment.txt exists before entering the function
-  if [[ ! -f Equipment.txt ]]; then
-    echo ""
-    print_error "Equipment file not found. No equipment has been registered yet."
-    echo "Would you like to:"
-    echo "1. Add equipment first"
-    echo "2. Return to main menu"
-    printf "Enter your choice (1 or 2): "
-    read -r choice
-    echo ""
-
-    case $choice in
-    1)
-      add_equipment
-      return
-      ;;
-    2 | *)
-      echo "Returning to main menu..."
-      sleep 1
-      return
-      ;;
-    esac
-  fi
-
   export_file() {
     out_file="Report_By_Status_${EqStatus// /_}.txt"
     {
@@ -1674,6 +1351,12 @@ sort_by_status() {
   print_mayoi_title_bar "Equipment Details Sorted By Status"
   echo ""
   echo ""
+
+  if [[ ! -f Equipment.txt ]]; then
+    print_error "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
 
   while true; do
     printf "${MAYOI_CATEGORY}Enter Equipment Status ${MAYOI_HIGHLIGHT}(Available/Unavailable)${RESET}: "
@@ -1712,7 +1395,7 @@ sort_by_status() {
       while true; do
         printf "${MAYOI_CATEGORY}Would you like to export the report as ASCII text file? ${MAYOI_HIGHLIGHT}(y)es${RESET} or ${MAYOI_HIGHLIGHT}(q)uit${RESET}: "
         read -r choice
-        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+        choice=${choice^^}
         if [[ "$choice" == "Y" ]]; then
           export_file
           printf "${MAYOI_DATA}Press Enter to continue...${RESET}"
@@ -1733,47 +1416,9 @@ sort_by_status() {
     fi
   done
 }
-
-#------------------------------------------------------------------------------
-# Function: sort_by_type
-# Purpose: Sort and display equipment by equipment type
-# Theme: Shinobu Oshino (golden/cream colors)
-# Features:
-# - Pre-validation of Equipment.txt existence
-# - Interactive menu for missing file handling
-# - User input for type selection (keyboard/mouse/monitor/webcam/mousepad/laptop)
-# - Case-insensitive type matching with lowercase conversion
-# - Sorting by model within type groups
-# - Professional table display with type highlighting
-# - Export to "Report_By_Type_[Type].txt" option
-# - Shinobu character theme colors with purchase date inclusion
-# - Comprehensive equipment type validation
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Sort by Type
 sort_by_type() {
-  # Check if Equipment.txt exists before entering the function
-  if [[ ! -f Equipment.txt ]]; then
-    echo ""
-    print_error "Equipment file not found. No equipment has been registered yet."
-    echo "Would you like to:"
-    echo "1. Add equipment first"
-    echo "2. Return to main menu"
-    printf "Enter your choice (1 or 2): "
-    read -r choice
-    echo ""
-
-    case $choice in
-    1)
-      add_equipment
-      return
-      ;;
-    2 | *)
-      echo "Returning to main menu..."
-      sleep 1
-      return
-      ;;
-    esac
-  fi
-
   export_file() {
     out_file="Report_By_Type_${EquipType// /_}.txt"
     {
@@ -1787,6 +1432,12 @@ sort_by_type() {
   print_shinobu_title_bar "Equipment Details Sorted By Type"
   echo ""
   echo ""
+
+  if [[ ! -f Equipment.txt ]]; then
+    print_error "Equipment file not found, please add equipment first."
+    echo "-------------------------------------------------------------------------------"
+    return
+  fi
 
   while true; do
     printf "${SHINOBU_CATEGORY}Enter equipment Type ${SHINOBU_HIGHLIGHT}(keyboard/mouse/monitor/webcam/mousepad/laptop)${RESET}: "
@@ -1825,7 +1476,7 @@ sort_by_type() {
       while true; do
         printf "${SHINOBU_CATEGORY}Would you like to export the report as ASCII text file? ${SHINOBU_HIGHLIGHT}(y)es${RESET} or ${SHINOBU_HIGHLIGHT}(q)uit${RESET}: "
         read -r choice
-        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+        choice=${choice^^}
         if [[ "$choice" == "Y" ]]; then
           export_file
           printf "${SHINOBU_DATA}Press Enter to continue...${RESET}"
@@ -1846,23 +1497,7 @@ sort_by_type() {
     fi
   done
 }
-
-#===============================================================================
-# EXIT SCREEN AND MAIN APPLICATION CONTROL
-#===============================================================================
-
-#------------------------------------------------------------------------------
-# Function: show_undertale_thanks
-# Purpose: Display a beautiful exit screen inspired by Undertale game
-# Features:
-# - Full-screen black background effect
-# - Centered text with heart symbols
-# - Professional farewell message with creator credits
-# - Terminal-responsive centering
-# - Heart emoji styling in red color
-# - Professional exit experience
-# Theme: Undertale-inspired black background with white text and red hearts
-#------------------------------------------------------------------------------
+# Undertale-inspired thank you screen
 show_undertale_thanks() {
   # Set black background and white text
   local BLACK_BG="\033[40m"
@@ -1906,32 +1541,9 @@ show_undertale_thanks() {
   printf "${RESET}"
 }
 
-#===============================================================================
-# MAIN APPLICATION CONTROLLER
-#===============================================================================
+#--------------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-# Function: main_menu
-# Purpose: Main application controller and menu system
-# Features:
-# - Infinite loop for continuous menu operation
-# - Input validation and sanitization
-# - Case-insensitive input handling
-# - Single character input requirement
-# - Professional error handling for invalid options
-# - Graceful exit with thank you screen
-# - Clean screen management between operations
-#
-# Menu Options:
-# A - Add Equipment (with auto-ID generation)
-# S - Search Equipment (by serial number)
-# U - Update Equipment (comprehensive field updates)
-# D - Delete Equipment (with confirmation)
-# M - Sort by Model (Senjougahara theme)
-# T - Sort by Status (Mayoi theme)
-# P - Sort by Type (Shinobu theme)
-# Q - Quit (with Undertale-inspired exit screen)
-#------------------------------------------------------------------------------
+# Main menu
 main_menu() {
   # Read function
   read_input() {
@@ -1952,7 +1564,7 @@ main_menu() {
     fi
 
     # Normalize to uppercase first letter only
-    choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+    choice=${choice^^}
     case ${choice:0:1} in
     A) add_equipment ;;
     S) search_equipment ;;
@@ -1975,32 +1587,6 @@ main_menu() {
   done
 }
 
-#===============================================================================
-# APPLICATION ENTRY POINT
-#===============================================================================
-
-# Start the main menu application
 main_menu
 
-# Clean exit
 exit 0
-
-#===============================================================================
-# END OF TENNA EQUIPMENT MANAGEMENT SYSTEM
-#===============================================================================
-#
-# Script Summary:
-# - Total Functions: 20+
-# - Lines of Code: 1900+
-# - Features: Add, Search, Update, Delete, Sort equipment with validation
-# - Themes: Multiple anime-inspired color schemes
-# - File Format: CSV-based Equipment.txt storage
-# - Validation: Comprehensive input validation for all fields
-# - UI: Professional terminal interface with responsive design
-# - Export: ASCII text file reporting capabilities
-#
-# Created by: Lye Wei Lun, Lim Yung Juin, Swetha
-# Course: Operating Systems Group Assignment
-# Institution: [University Name]
-# Academic Year: 2025
-#===============================================================================
