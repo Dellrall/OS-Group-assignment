@@ -22,16 +22,16 @@ SENJOU_HIGHLIGHT="\033[35m"   # Purple for highlighted data
 SENJOU_DATA="\033[38;5;183m"  # Soft lavender for regular data
 
 # Hachikuji Mayoi - White/Black/Green theme (school uniform colors)
-MAYOI_HEADER="\033[48;5;22m"  # Dark green background
-MAYOI_CATEGORY="\033[97m"     # Bright white for categories  
-MAYOI_HIGHLIGHT="\033[92m"    # Bright green for highlighted data
-MAYOI_DATA="\033[37m"         # Light gray for regular data
+MAYOI_HEADER="\033[48;5;22m" # Dark green background
+MAYOI_CATEGORY="\033[97m"    # Bright white for categories
+MAYOI_HIGHLIGHT="\033[92m"   # Bright green for highlighted data
+MAYOI_DATA="\033[37m"        # Light gray for regular data
 
 # Shinobu Oshino (Monogatari) - Golden blonde/elegant cream theme
-SHINOBU_HEADER="\033[48;5;220m" # Golden yellow background
-SHINOBU_CATEGORY="\033[38;5;136m"     # Dark golden brown for categories
-SHINOBU_HIGHLIGHT="\033[38;5;178m"    # Bright gold for highlighted data
-SHINOBU_DATA="\033[38;5;230m"   # Cream/ivory for regular data
+SHINOBU_HEADER="\033[48;5;220m"    # Golden yellow background
+SHINOBU_CATEGORY="\033[38;5;136m"  # Dark golden brown for categories
+SHINOBU_HIGHLIGHT="\033[38;5;178m" # Bright gold for highlighted data
+SHINOBU_DATA="\033[38;5;230m"      # Cream/ivory for regular data
 
 # Color Functions
 print_title_bar() {
@@ -692,10 +692,32 @@ add_equipment() {
       echo ""
       echo ""
 
-      # Input Equipment ID
+      # Input Equipment ID - now supports auto-generation
       while true; do
-        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+        printf "${CYAN_HIGHLIGHT}Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}, leave empty for auto-assignment): "
         read -r equipment_id
+        
+        # If empty, auto-generate next ID
+        if [[ -z "$equipment_id" ]]; then
+          if [[ -f Equipment.txt ]]; then
+            # Find the largest existing ID number
+            largest_num=$(grep -o '^E[0-9]\{4\}:' Equipment.txt | sed 's/E0*\([0-9]\+\):/\1/' | sort -n | tail -1)
+            if [[ -n "$largest_num" ]]; then
+              next_num=$((largest_num + 1))
+            else
+              next_num=1
+            fi
+          else
+            next_num=1
+          fi
+          
+          # Format as E0001, E0002, etc.
+          equipment_id=$(printf "E%04d" "$next_num")
+          printf "${GREEN_SUCCESS}Auto-assigned Equipment ID: ${equipment_id}${RESET}\n"
+          break
+        fi
+        
+        # Manual input validation (for non-empty input)
         if null_check "$equipment_id" "Equipment ID"; then
           if [[ ! "$equipment_id" =~ ^[E][0-9]{4}$ ]]; then
             print_error "Invalid Equipment ID format. Please use the format: E0001"
@@ -737,15 +759,16 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Serial Number: " equipment_serial
+        printf "${CYAN_HIGHLIGHT}Serial Number${RESET} (format ${SOFT_YELLOW}AB123456789${RESET}): "
+        read -r equipment_serial
         if null_check "$equipment_serial" "Equipment Serial Number"; then
           if [[ ! "$equipment_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
-            echo "Invalid Serial Number format. Please use the format: AB123456789"
+            print_error "Invalid Serial Number format. Please use the format: AB123456789"
             sleep 2
             tput cuu 2
             tput ed
           elif [[ -f Equipment.txt && -n $(grep ":$equipment_serial:" Equipment.txt) ]]; then
-            echo "Serial Number already exists. Please enter a unique Serial Number."
+            print_error "Serial Number already exists. Please enter a unique Serial Number."
             sleep 2
             tput cuu 2
             tput ed
@@ -756,10 +779,11 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Status (Available/Unavailable): " equipment_status
+        printf "${CYAN_HIGHLIGHT}Status${RESET} (${SOFT_YELLOW}Available${RESET}/${SOFT_YELLOW}Unavailable${RESET}): "
+        read -r equipment_status
         if null_check "$equipment_status" "Equipment Status"; then
           if [[ ! "$equipment_status" == "Available" && ! "$equipment_status" == "Unavailable" ]]; then
-            echo "Invalid status. Please enter Available or Unavailable."
+            print_error "Invalid status. Please enter Available or Unavailable."
             sleep 2
             tput cuu 2
             tput ed
@@ -772,14 +796,15 @@ add_equipment() {
       while true; do
         # Get current date in MM-DD-YYYY format
         current_date=$(date +"%m-%d-%Y")
-        read -rp "Purchase Date (MM-DD-YYYY) [${current_date}]: " equipment_purchase_date
+        printf "${CYAN_HIGHLIGHT}Purchase Date${RESET} (${SOFT_YELLOW}MM-DD-YYYY${RESET}) [${SOFT_YELLOW}${current_date}${RESET}]: "
+        read -r equipment_purchase_date
         if [[ -z "$equipment_purchase_date" ]]; then
           equipment_purchase_date="$current_date"
           break
         fi
 
         if ! validate_date "$equipment_purchase_date" "Invalid purchase date."; then
-          echo "Invalid date format. Please use MM-DD-YYYY."
+          print_error "Invalid date format. Please use MM-DD-YYYY."
           sleep 2
           tput cuu 2
           tput ed
@@ -789,7 +814,8 @@ add_equipment() {
       done
 
       while true; do
-        read -rp "Warranty Date (MM-DD-YYYY): " equipment_expiry_date
+        printf "${CYAN_HIGHLIGHT}Warranty Date${RESET} (${SOFT_YELLOW}MM-DD-YYYY${RESET}): "
+        read -r equipment_expiry_date
 
         # First validate the date format
         if ! validate_date "$equipment_expiry_date" "Invalid warranty date."; then
@@ -805,7 +831,7 @@ add_equipment() {
         # Convert dates to seconds since epoch for comparison
         if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) ||
           ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
-          echo "Error processing dates."
+          print_error "Error processing dates."
           sleep 2
           tput cuu 2
           tput ed
@@ -817,7 +843,7 @@ add_equipment() {
 
         # Check if warranty date is at least 30 days after purchase date
         if ((difference_days < 30)); then
-          echo "Warranty date must be at least 30 days after purchase date."
+          print_error "Warranty date must be at least 30 days after purchase date."
           sleep 2
           tput cuu 2
           tput ed
@@ -961,18 +987,19 @@ update_equipment() {
       break
     fi
 
-    read -rp "Enter Equipment ID: " EquipID
+    printf "${CYAN_HIGHLIGHT}Enter Equipment ID${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+    read -r EquipID
     echo "-------------------------------------------------------------------------"
     # Check if equipment exists
     if null_check "$EquipID" "Equipment ID"; then
       if [[ ! "$EquipID" =~ ^[E][0-9]{4}$ ]]; then
-        echo "Invalid Equipment ID format. Please use the format: E0001"
+        print_error "Invalid Equipment ID format. Please use the format: E0001"
         sleep 2
         tput cuu 3
         tput ed
         continue
       elif ! grep -q "^${EquipID}:" Equipment.txt; then
-        echo "No equipment found with ID: $EquipID"
+        print_error "No equipment found with ID: $EquipID"
         sleep 2
         tput cuu 3
         tput ed
@@ -1000,16 +1027,17 @@ update_equipment() {
 
       # Prompt for new values
       while true; do
-        read -rp "New Serial Number (leave empty to keep current): " new_serial
+        printf "${CYAN_HIGHLIGHT}New Serial Number${RESET} (format ${SOFT_YELLOW}AB123456789${RESET}, leave empty to keep current): "
+        read -r new_serial
         if [[ -n $new_serial ]]; then
           if [[ ! "$new_serial" =~ ^[A-Z]{2}[0-9]{9}$ ]]; then
-            echo "Invalid Serial Number format. Keeping current value."
+            print_error "Invalid Serial Number format. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
             new_serial=""
           elif grep -q ":$new_serial:" Equipment.txt && ! grep -q "^${EquipID}:.*:$new_serial:" Equipment.txt; then
-            echo "Duplicate Serial in another record. Ignoring."
+            print_error "Duplicate Serial in another record. Ignoring."
             new_serial=""
           fi
         fi
@@ -1017,10 +1045,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Type (leave empty to keep current): " new_type
+        printf "${CYAN_HIGHLIGHT}New Type${RESET} (${SOFT_YELLOW}keyboard${RESET}/${SOFT_YELLOW}mouse${RESET}/${SOFT_YELLOW}monitor${RESET}/${SOFT_YELLOW}webcam${RESET}/${SOFT_YELLOW}mousepad${RESET}/${SOFT_YELLOW}laptop${RESET}, leave empty to keep current): "
+        read -r new_type
         if [[ -n $new_type ]]; then
           if [[ ! "$new_type" == "keyboard" && ! "$new_type" == "mouse" && ! "$new_type" == "monitor" && ! "$new_type" == "webcam" && ! "$new_type" == "mousepad" && ! "$new_type" == "laptop" ]]; then
-            echo "Invalid equipment type. Keeping current value."
+            print_error "Invalid equipment type. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1031,10 +1060,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Model (leave empty to keep current): " new_model
+        printf "${CYAN_HIGHLIGHT}New Model${RESET} (leave empty to keep current): "
+        read -r new_model
         if [[ -n $new_model ]]; then
           if [[ ! "$new_model" =~ ^[A-Za-z0-9\ ]+$ ]]; then
-            echo "Invalid Model format. Keeping current value."
+            print_error "Invalid Model format. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1045,10 +1075,11 @@ update_equipment() {
       done
 
       while true; do
-        read -rp "New Status (Available/Unavailable, leave empty to keep current): " new_status
+        printf "${CYAN_HIGHLIGHT}New Status${RESET} (${SOFT_YELLOW}Available${RESET}/${SOFT_YELLOW}Unavailable${RESET}, leave empty to keep current): "
+        read -r new_status
         if [[ -n $new_status ]]; then
           if [[ ! "$new_status" == "Available" && ! "$new_status" == "Unavailable" ]]; then
-            echo "Invalid status. Keeping current value."
+            print_error "Invalid status. Keeping current value."
             sleep 2
             tput cuu 1
             tput ed
@@ -1060,25 +1091,27 @@ update_equipment() {
 
       # Purchase Date with format validation
       while true; do
-        read -rp "New Purchase Date (YYYY-MM-DD, leave empty to keep current): " new_purchase_date
+        printf "${CYAN_HIGHLIGHT}New Purchase Date${RESET} (${SOFT_YELLOW}YYYY-MM-DD${RESET}, leave empty to keep current): "
+        read -r new_purchase_date
         if [[ -z "$new_purchase_date" ]]; then
           break
         fi
         if validate_date "$new_purchase_date" "Invalid purchase date." "YYYY-MM-DD"; then
           break
         else
-          echo "Please try again or leave empty to keep current date."
+          print_error "Please try again or leave empty to keep current date."
         fi
       done
 
       # Warranty Date with format validation
       while true; do
-        read -rp "New Warranty Date (YYYY-MM-DD, leave empty to keep current): " new_expiry_date
+        printf "${CYAN_HIGHLIGHT}New Warranty Date${RESET} (${SOFT_YELLOW}YYYY-MM-DD${RESET}, leave empty to keep current): "
+        read -r new_expiry_date
         if [[ -z "$new_expiry_date" ]]; then
           break
         fi
         if ! validate_date "$new_expiry_date" "Invalid warranty date." "YYYY-MM-DD"; then
-          echo "Please try again or leave empty to keep current date."
+          print_error "Please try again or leave empty to keep current date."
           continue
         fi
 
@@ -1089,13 +1122,13 @@ update_equipment() {
 
         if ! purchase_date_seconds=$(date -d "${purchase_iso}" +%s 2>/dev/null) ||
           ! warranty_date_seconds=$(date -d "${warranty_iso}" +%s 2>/dev/null); then
-          echo "Error processing dates. Please try again."
+          print_error "Error processing dates. Please try again."
           continue
         fi
 
         difference_days=$(((warranty_date_seconds - purchase_date_seconds) / 86400))
         if ((difference_days < 30)); then
-          echo "Warranty date must be at least 30 days after purchase date."
+          print_error "Warranty date must be at least 30 days after purchase date."
           continue
         fi
         break
@@ -1175,16 +1208,17 @@ delete_equipment() {
       break
     fi
 
-    read -rp "Enter Equipment ID to delete: " EquipID
+    printf "${CYAN_HIGHLIGHT}Enter Equipment ID to delete${RESET} (format ${SOFT_YELLOW}E0001${RESET}): "
+    read -r EquipID
     echo "-------------------------------------------------------------------------"
     if ! [[ $EquipID =~ ^E[0-9]{4}$ ]]; then
-      echo "Invalid Equipment ID format. Please use the format: E0001"
+      print_error "Invalid Equipment ID format. Please use the format: E0001"
       sleep 2
       tput cuu 4
       tput ed
       continue
     elif ! grep -q "^$EquipID:" Equipment.txt; then
-      echo "No equipment found with ID: $EquipID"
+      print_error "No equipment found with ID: $EquipID"
       sleep 2
       tput cuu 2
       tput ed
@@ -1295,8 +1329,8 @@ sort_by_model() {
     else
       print_error "Invalid choice, please enter either y or q"
       sleep 2
-      tput cuu 2  # Move cursor up 2 lines
-      tput ed     # Clear from cursor to end of screen
+      tput cuu 2 # Move cursor up 2 lines
+      tput ed    # Clear from cursor to end of screen
     fi
   done
 }
@@ -1374,8 +1408,8 @@ sort_by_status() {
         else
           print_error "Invalid choice, please enter either y or q"
           sleep 2
-          tput cuu 2  # Move cursor up 2 lines
-          tput ed     # Clear from cursor to end of screen
+          tput cuu 2 # Move cursor up 2 lines
+          tput ed    # Clear from cursor to end of screen
         fi
       done
       break
@@ -1455,8 +1489,8 @@ sort_by_type() {
         else
           print_error "Invalid choice, please enter either y or q"
           sleep 2
-          tput cuu 2  # Move cursor up 2 lines
-          tput ed     # Clear from cursor to end of screen
+          tput cuu 2 # Move cursor up 2 lines
+          tput ed    # Clear from cursor to end of screen
         fi
       done
       break
@@ -1470,23 +1504,23 @@ show_undertale_thanks() {
   local WHITE_TEXT="\033[97m"
   local RED_HEART="\033[91m♥\033[0m"
   local RESET="\033[0m"
-  
+
   # Clear screen and set black background
   clear
   printf "${BLACK_BG}"
-  
+
   # Fill entire screen with black background
   local term_height=$(tput lines 2>/dev/null || echo "24")
   local term_width=$(tput cols 2>/dev/null || echo "80")
-  
+
   for ((i = 0; i < term_height; i++)); do
     printf "%*s\n" "$term_width" ""
   done
-  
+
   # Move cursor to center of screen
   local center_row=$((term_height / 2 - 4))
   tput cup $center_row 0
-  
+
   # Display thank you message with red heart
   center_text "${WHITE_TEXT}${BOLD}Thank you for using Equipment Management System!${RESET}${BLACK_BG}"
   echo ""
@@ -1498,10 +1532,10 @@ show_undertale_thanks() {
   echo ""
   echo ""
   center_text "${WHITE_TEXT}${BOLD}* (Press any key to continue...)${RESET}${BLACK_BG}"
-  
+
   # Wait for user input
   read -n 1 -s
-  
+
   # Clear screen and reset colors
   clear
   printf "${RESET}"
